@@ -1,8 +1,9 @@
 #include <AltSoftSerial.h>
+#include <LiquidCrystal.h>
 
 AltSoftSerial rfidScanner;
-auto& display = rfidScanner;
 auto& server = Serial;
+LiquidCrystal lcd(11, 10, 5, 4, 3, 2);
 
 const char* CONFIRMATION_MSG = "ok";
 const int RFID_LEN = 10;
@@ -11,21 +12,28 @@ const unsigned long MOTOR_DELAY = 1000;
 const unsigned long OPEN_DOOR_DURATION = 3000;
 const unsigned long GREEN_LIGHT_DURATION = 2000;
 const unsigned long RED_LIGHT_DURATION = 2000;
+const unsigned long LCD_PRINTING_DUARTION = 3000;
 
 const int GREEN_LED_PORT = 13;
 const int RED_LED_PORT = 12;
 const int MOTOR_PORT_1 = 7;
 const int MOTOR_PORT_2 = 6;
 
+const char* LCD_ACCESS_GRANTED_MSG = "Access Granted!";
+const char* LCD_ACCESS_DENIED_MSG = "Access Denied!";
+
 struct State {
-  bool isDoorOpen;
+  bool isDoorOpen = false;
   unsigned long lastTimeDoorOpened;
 
-  bool isGreenLightOn;
+  bool isGreenLightOn = false;
   unsigned long lastTimeGreenLightTurnedOn;
 
-  bool isRedLightOn;
+  bool isRedLightOn = false;
   unsigned long lastTimeRedLightTurnedOn;
+
+  bool isLcdClear = true;
+  unsigned long lastTimeLcdPrinted;
 };
 
 
@@ -68,12 +76,22 @@ void grantAccess(State& state) {
   openDoor();
   state.isDoorOpen = true;
   state.lastTimeDoorOpened = millis();
+
+  lcd.clear();
+  lcd.print(LCD_ACCESS_GRANTED_MSG);
+  state.isLcdClear = false;
+  state.lastTimeLcdPrinted = millis();
 }
 
 void denyAccess(State& state) {
   digitalWrite(RED_LED_PORT, HIGH);
   state.isRedLightOn = true;
   state.lastTimeRedLightTurnedOn = millis();
+
+  lcd.clear();
+  lcd.print(LCD_ACCESS_DENIED_MSG);
+  state.isLcdClear = false;
+  state.lastTimeLcdPrinted = millis();
 }
 
 void executeServerCommand(State& state) {
@@ -83,11 +101,9 @@ void executeServerCommand(State& state) {
   char buffer[128] = {0};
   server.readBytes(buffer, 128);
   if (!strcmp(buffer, CONFIRMATION_MSG)) {
-    rfidScanner.println("Access Granted!");
     grantAccess(state);
   }
   else {
-    rfidScanner.println("Access denied!");
     denyAccess(state);
   }
 }
@@ -112,6 +128,12 @@ void stabalize(State& state) {
       digitalWrite(RED_LED_PORT, LOW);
       state.isRedLightOn = false;
     }
+
+  if (!state.isLcdClear)
+    if (currentTime - state.lastTimeLcdPrinted >= LCD_PRINTING_DUARTION) {
+      lcd.clear();
+      state.isLcdClear = true;
+    }
 }
 
 
@@ -124,10 +146,12 @@ void setup() {
 
   pinMode(MOTOR_PORT_1, OUTPUT);
   pinMode(MOTOR_PORT_2, OUTPUT);
+
+  lcd.begin(16, 2);
 }
 
 void loop() {
-  static State currentState = {0};
+  static State currentState;
   static char rfidBuff[13] = {0};
   static bool isSentToServer = false;
 
