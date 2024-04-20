@@ -37,7 +37,10 @@ struct State {
 };
 
 
-void openDoor() {
+void openDoor(State& state) {
+  if (state.isDoorOpen)
+    return;
+  
   digitalWrite(MOTOR_PORT_1, HIGH);
   digitalWrite(MOTOR_PORT_2, LOW);
   delay(MOTOR_DELAY);
@@ -45,7 +48,10 @@ void openDoor() {
   digitalWrite(MOTOR_PORT_2, LOW);
 }
 
-void closeDoor() {
+void closeDoor(State& state) {
+  if (!state.isDoorOpen)
+    return;
+  
   digitalWrite(MOTOR_PORT_1, LOW);
   digitalWrite(MOTOR_PORT_2, HIGH);
   delay(MOTOR_DELAY);
@@ -73,7 +79,7 @@ void grantAccess(State& state) {
   state.isGreenLightOn = true;
   state.lastTimeGreenLightTurnedOn = millis();
 
-  openDoor();
+  openDoor(state);
   state.isDoorOpen = true;
   state.lastTimeDoorOpened = millis();
 
@@ -87,6 +93,9 @@ void denyAccess(State& state) {
   digitalWrite(RED_LED_PORT, HIGH);
   state.isRedLightOn = true;
   state.lastTimeRedLightTurnedOn = millis();
+
+  closeDoor(state);
+  state.isDoorOpen = false;
 
   lcd.clear();
   lcd.print(LCD_ACCESS_DENIED_MSG);
@@ -113,7 +122,7 @@ void stabalize(State& state) {
 
   if (state.isDoorOpen)
     if (currentTime - state.lastTimeDoorOpened >= OPEN_DOOR_DURATION) {
-      closeDoor();
+      closeDoor(state);
       state.isDoorOpen = false;
     }
   
