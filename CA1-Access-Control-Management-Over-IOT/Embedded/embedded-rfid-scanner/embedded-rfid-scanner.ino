@@ -1,12 +1,16 @@
 #include <AltSoftSerial.h>
 
 AltSoftSerial rfidScanner;
+auto& display = rfidScanner;
 auto& server = Serial;
 
 const char* CONFIRMATION_MSG = "ok";
-const int RFID_LEN = 12;
+const int RFID_LEN = 10;
 const unsigned long MOTOR_DELAY = 1000;
-const unsigned long OPEN_DOOR_TIME = 30000;
+
+const unsigned long OPEN_DOOR_DURATION = 3000;
+const unsigned long GREEN_LIGHT_DURATION = 2000;
+const unsigned long RED_LIGHT_DURATION = 2000;
 
 const int GREEN_LED_PORT = 13;
 const int RED_LED_PORT = 12;
@@ -28,6 +32,14 @@ struct State {
 void openDoor() {
   digitalWrite(MOTOR_PORT_1, HIGH);
   digitalWrite(MOTOR_PORT_2, LOW);
+  delay(MOTOR_DELAY);
+  digitalWrite(MOTOR_PORT_1, LOW);
+  digitalWrite(MOTOR_PORT_2, LOW);
+}
+
+void closeDoor() {
+  digitalWrite(MOTOR_PORT_1, LOW);
+  digitalWrite(MOTOR_PORT_2, HIGH);
   delay(MOTOR_DELAY);
   digitalWrite(MOTOR_PORT_1, LOW);
   digitalWrite(MOTOR_PORT_2, LOW);
@@ -80,6 +92,28 @@ void executeServerCommand(State& state) {
   }
 }
 
+void stabalize(State& state) {
+  const unsigned long currentTime = millis();
+
+  if (state.isDoorOpen)
+    if (currentTime - state.lastTimeDoorOpened >= OPEN_DOOR_DURATION) {
+      closeDoor();
+      state.isDoorOpen = false;
+    }
+  
+  if (state.isGreenLightOn)
+    if (currentTime - state.lastTimeGreenLightTurnedOn >= GREEN_LIGHT_DURATION) {
+      digitalWrite(GREEN_LED_PORT, LOW);
+      state.isGreenLightOn = false;
+    }
+  
+  if (state.isRedLightOn)
+    if (currentTime - state.lastTimeRedLightTurnedOn >= RED_LIGHT_DURATION) {
+      digitalWrite(RED_LED_PORT, LOW);
+      state.isRedLightOn = false;
+    }
+}
+
 
 void setup() {
   Serial.begin(9600);
@@ -104,6 +138,8 @@ void loop() {
   if (!isSentToServer && rfidLen == RFID_LEN) {
     sendToServer(rfidBuff);
     isSentToServer = true;
-    executeServerCommand(state);
+    executeServerCommand(currentState);
   }
+
+  stabalize(currentState);
 }
