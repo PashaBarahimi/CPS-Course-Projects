@@ -17,6 +17,9 @@ add_executable(Server
   monitoringsystemauthenticator.h monitoringsystemauthenticator.cpp
   monitoringsystemuser.h monitoringsystemuser.cpp
   utils.h utils.cpp
+  monitoringsystemauthenticationitem.h monitoringsystemauthenticationitem.cpp
+  monitoringsystemhistory.h monitoringsystemhistory.cpp
+  data/monitoring_system_history.json
   data/monitoring_system_users.json
 )
 target_link_libraries(Server Qt${QT_VERSION_MAJOR}::Core)
