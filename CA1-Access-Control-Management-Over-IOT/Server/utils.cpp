@@ -15,4 +15,14 @@ QByteArray Utils::readFile(const QString& filePath)
     return file.readAll();
 }
 
+void Utils::writeFile(const QString& filePath, const QByteArray& data)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "Could not open file" << filePath;
+        return;
+    }
+    file.write(data);
+}
+
 } // namespace CPS
