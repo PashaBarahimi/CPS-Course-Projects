@@ -11,7 +11,14 @@ namespace CPS {
 
 MonitoringSystemAuthenticator::MonitoringSystemAuthenticator(const QString& jsonFilePath)
     : jsonFilePath_(jsonFilePath)
-    , users_(readUsers()) {}
+{
+    loadUsers();
+}
+
+MonitoringSystemAuthenticator::~MonitoringSystemAuthenticator()
+{
+    saveUsers();
+}
 
 bool MonitoringSystemAuthenticator::authenticate(const QString& username, const QString& password)
 {
@@ -25,20 +32,36 @@ bool MonitoringSystemAuthenticator::authenticate(const QString& username, const 
     return false;
 }
 
-QList<MonitoringSystemUser> MonitoringSystemAuthenticator::readUsers()
+void MonitoringSystemAuthenticator::addUser(const QString& username, const QString& password)
+{
+    QString hashedPassword = hashPassword(password);
+    MonitoringSystemUser user(username, hashedPassword);
+    users_.append(user);
+}
+
+void MonitoringSystemAuthenticator::loadUsers()
 {
     QByteArray jsonFile = Utils::readFile(jsonFilePath_);
     QJsonDocument jsonDocument = QJsonDocument::fromJson(jsonFile);
     QJsonArray jsonArray = jsonDocument.array();
 
-    QList<MonitoringSystemUser> users;
     for (const QJsonValue& jsonValue : jsonArray) {
         QJsonObject jsonObject = jsonValue.toObject();
-        QString username = jsonObject["username"].toString();
-        QString hashedPassword = jsonObject["password"].toString();
-        users.append(MonitoringSystemUser(username, hashedPassword));
+        MonitoringSystemUser user(jsonObject);
+        users_.append(user);
     }
-    return users;
+}
+
+void MonitoringSystemAuthenticator::saveUsers()
+{
+    QJsonArray jsonArray;
+    for (const MonitoringSystemUser& user : users_) {
+        jsonArray.append(user.toJsonObject());
+    }
+
+    QJsonDocument jsonDocument(jsonArray);
+    QByteArray jsonFile = jsonDocument.toJson();
+    Utils::writeFile(jsonFilePath_, jsonFile);
 }
 
 QString MonitoringSystemAuthenticator::decodePassword(const QString& encodedPassword)

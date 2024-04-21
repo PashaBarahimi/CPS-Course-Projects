@@ -13,10 +13,13 @@ class MonitoringSystemAuthenticator
 {
 public:
     MonitoringSystemAuthenticator(const QString& jsonFilePath);
+    ~MonitoringSystemAuthenticator();
     bool authenticate(const QString& username, const QString& password);
+    void addUser(const QString& username, const QString& password);
 
 private:
-    QList<MonitoringSystemUser> readUsers();
+    void loadUsers();
+    void saveUsers();
     QString decodePassword(const QString& encodedPassword);
     QString hashPassword(const QString& password);
 
