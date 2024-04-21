@@ -1,13 +1,12 @@
 #ifndef MONITORINGSYSTEMAUTHENTICATIONITEM_H
 #define MONITORINGSYSTEMAUTHENTICATIONITEM_H
 
-#include <QString>
 #include <QJsonObject>
+#include <QString>
 
 namespace CPS {
 
-class MonitoringSystemAuthenticationItem
-{
+class MonitoringSystemAuthenticationItem {
 public:
     MonitoringSystemAuthenticationItem(const QString& username, const QString& time, const QString& date);
     MonitoringSystemAuthenticationItem(const QJsonObject& jsonObject);

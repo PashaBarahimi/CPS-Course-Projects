@@ -1,13 +1,12 @@
 #ifndef MONITORINGSYSTEMUSER_H
 #define MONITORINGSYSTEMUSER_H
 
-#include <QString>
 #include <QJsonObject>
+#include <QString>
 
 namespace CPS {
 
-class MonitoringSystemUser
-{
+class MonitoringSystemUser {
 public:
     MonitoringSystemUser(const QString& username, const QString& hashedPassword);
     MonitoringSystemUser(const QJsonObject& jsonObject);

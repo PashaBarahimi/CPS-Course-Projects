@@ -8,8 +8,7 @@ MonitoringSystemAuthenticationItem::MonitoringSystemAuthenticationItem(const QSt
 MonitoringSystemAuthenticationItem::MonitoringSystemAuthenticationItem(const QJsonObject& jsonObject)
     : username_(jsonObject["username"].toString()), time_(jsonObject["time"].toString()), date_(jsonObject["date"].toString()) {}
 
-QJsonObject MonitoringSystemAuthenticationItem::toJsonObject() const
-{
+QJsonObject MonitoringSystemAuthenticationItem::toJsonObject() const {
     QJsonObject jsonObject;
     jsonObject["username"] = username_;
     jsonObject["time"] = time_;

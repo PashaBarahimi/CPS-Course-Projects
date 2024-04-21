@@ -8,53 +8,44 @@
 
 namespace CPS {
 
-MonitoringSystemHistory::MonitoringSystemHistory(const QString& historyFilePath)
-{
+MonitoringSystemHistory::MonitoringSystemHistory(const QString& historyFilePath) {
     historyFilePath_ = historyFilePath;
     loadHistory();
 }
 
-MonitoringSystemHistory::~MonitoringSystemHistory()
-{
+MonitoringSystemHistory::~MonitoringSystemHistory() {
     saveHistory();
 }
 
-void MonitoringSystemHistory::addItem(const MonitoringSystemAuthenticationItem &item)
-{
+void MonitoringSystemHistory::addItem(const MonitoringSystemAuthenticationItem& item) {
     history_.append(item);
 }
 
-QJsonArray MonitoringSystemHistory::getHistory() const
-{
+QJsonArray MonitoringSystemHistory::getHistory() const {
     QJsonArray array;
-    for (const auto& item : history_)
-    {
+    for (const auto& item : history_) {
         array.append(item.toJsonObject());
     }
 
     return array;
 }
 
-void MonitoringSystemHistory::loadHistory()
-{
+void MonitoringSystemHistory::loadHistory() {
     history_.clear();
 
     QByteArray data = Utils::readFile(historyFilePath_);
     QJsonDocument doc = QJsonDocument::fromJson(data);
     QJsonArray array = doc.array();
 
-    for (const auto& item : array)
-    {
+    for (const auto& item : array) {
         MonitoringSystemAuthenticationItem authItem(item.toObject());
         history_.append(authItem);
     }
 }
 
-void MonitoringSystemHistory::saveHistory()
-{
+void MonitoringSystemHistory::saveHistory() {
     QJsonArray array;
-    for (const auto& item : history_)
-    {
+    for (const auto& item : history_) {
         array.append(item.toJsonObject());
     }
 

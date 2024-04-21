@@ -1,16 +1,15 @@
 #ifndef MONITORINGSYSTEMAUTHENTICATOR_H
 #define MONITORINGSYSTEMAUTHENTICATOR_H
 
-#include <QString>
-#include <QList>
 #include <QJsonArray>
+#include <QList>
+#include <QString>
 
 #include "monitoringsystemuser.h"
 
 namespace CPS {
 
-class MonitoringSystemAuthenticator
-{
+class MonitoringSystemAuthenticator {
 public:
     MonitoringSystemAuthenticator(const QString& jsonFilePath);
     ~MonitoringSystemAuthenticator();

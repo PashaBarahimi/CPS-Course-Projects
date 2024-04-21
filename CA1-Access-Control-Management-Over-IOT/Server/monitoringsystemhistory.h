@@ -7,12 +7,11 @@
 
 namespace CPS {
 
-class MonitoringSystemHistory
-{
+class MonitoringSystemHistory {
 public:
     MonitoringSystemHistory(const QString& historyFilePath);
     ~MonitoringSystemHistory();
-    void addItem(const MonitoringSystemAuthenticationItem &item);
+    void addItem(const MonitoringSystemAuthenticationItem& item);
     QJsonArray getHistory() const;
 
 private:
