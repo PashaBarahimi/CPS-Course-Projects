@@ -3,18 +3,26 @@
 
 #include <QJsonArray>
 #include <QList>
+#include <QObject>
 #include <QString>
 
 #include "monitoringsystemuser.h"
 
 namespace CPS {
 
-class MonitoringSystemAuthenticator {
+class MonitoringSystemAuthenticator : public QObject {
+    Q_OBJECT
 public:
     MonitoringSystemAuthenticator(const QString& jsonFilePath);
     ~MonitoringSystemAuthenticator();
-    bool authenticate(const QString& username, const QString& password);
     void addUser(const QString& username, const QString& password);
+
+Q_SIGNALS:
+    void authenticated();
+    void unauthenticated();
+
+public Q_SLOTS:
+    void authenticate(const QString& username, const QString& password);
 
 private:
     void loadUsers();
