@@ -14,28 +14,32 @@ MonitoringSystemAuthenticator::MonitoringSystemAuthenticator(const QString& json
     loadUsers();
 }
 
-MonitoringSystemAuthenticator::~MonitoringSystemAuthenticator() {
-    saveUsers();
-}
+MonitoringSystemAuthenticator::~MonitoringSystemAuthenticator() { saveUsers(); }
 
-bool MonitoringSystemAuthenticator::authenticate(const QString& username, const QString& password) {
+void MonitoringSystemAuthenticator::authenticate(const QString& username, const QString& password) {
     QString decodedPassword = decodePassword(password);
     QString hashedPassword = hashPassword(decodedPassword);
     for (const MonitoringSystemUser& user : users_) {
-        if (user.username() == username && user.hashedPassword() == hashedPassword) {
-            return true;
+        if (user.username() == username &&
+            user.hashedPassword() == hashedPassword) {
+            qDebug() << "User" << username << "authenticated";
+            emit authenticated();
+            return;
         }
     }
-    return false;
+    qDebug() << "User" << username << "not authenticated";
+    emit unauthenticated();
 }
 
 void MonitoringSystemAuthenticator::addUser(const QString& username, const QString& password) {
     QString hashedPassword = hashPassword(password);
     MonitoringSystemUser user(username, hashedPassword);
-    users_.append(user);
+    users_ << user;
+    qDebug() << "User" << username << "added";
 }
 
 void MonitoringSystemAuthenticator::loadUsers() {
+    qDebug() << "Loading users from" << jsonFilePath_;
     QByteArray jsonFile = Utils::readFile(jsonFilePath_);
     QJsonDocument jsonDocument = QJsonDocument::fromJson(jsonFile);
     QJsonArray jsonArray = jsonDocument.array();
@@ -43,14 +47,16 @@ void MonitoringSystemAuthenticator::loadUsers() {
     for (const QJsonValue& jsonValue : jsonArray) {
         QJsonObject jsonObject = jsonValue.toObject();
         MonitoringSystemUser user(jsonObject);
-        users_.append(user);
+        users_ << user;
+        qDebug() << "User" << user.username() << "loaded";
     }
 }
 
 void MonitoringSystemAuthenticator::saveUsers() {
+    qDebug() << "Saving users to" << jsonFilePath_;
     QJsonArray jsonArray;
     for (const MonitoringSystemUser& user : users_) {
-        jsonArray.append(user.toJsonObject());
+        jsonArray << user.toJsonObject();
     }
 
     QJsonDocument jsonDocument(jsonArray);

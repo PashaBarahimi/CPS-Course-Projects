@@ -1,19 +1,48 @@
 #include <QCoreApplication>
+#include <QtCore/QCommandLineOption>
+#include <QtCore/QCommandLineParser>
+#include <QtCore/QLoggingCategory>
 
 #include "monitoringsystemauthenticator.h"
-#include "monitoringsystemhistory.h"
+#include "rfidauthenticationhistory.h"
+#include "websocketserver.h"
 
 const QString MONITORING_SYSTEM_USERS_JSON_FILE_PATH = "data/monitoring_system_users.json";
-const QString MONITORING_SYSTEM_HISTORY_JSON_FILE_PATH = "data/monitoring_system_history.json";
+const QString RFID_AUTHENTICATION_HISTORY_JSON_FILE_PATH = "data/monitoring_system_history.json";
 
 int main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
 
-    auto monitoringSystemAuthenticator = new CPS::MonitoringSystemAuthenticator(MONITORING_SYSTEM_USERS_JSON_FILE_PATH);
-    auto monitoringSystemHistory = new CPS::MonitoringSystemHistory(MONITORING_SYSTEM_HISTORY_JSON_FILE_PATH);
+    qSetMessagePattern("%{time} [%{type}] %{appname}: %{message}");
+    QLoggingCategory::setFilterRules("*.debug=true");
 
-    delete monitoringSystemAuthenticator;
-    delete monitoringSystemHistory;
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    QCommandLineOption portOption("port", "Port to listen on", "port", "12345");
+    parser.addOption(portOption);
+    parser.process(a);
+
+    int port = parser.value(portOption).toInt();
+
+    qDebug() << "Starting CPS Server";
+
+    auto monitoringSystemAuthenticator = new CPS::MonitoringSystemAuthenticator(MONITORING_SYSTEM_USERS_JSON_FILE_PATH);
+    auto rfidAuthenticationHistory = new CPS::RfidAuthenticationHistory(RFID_AUTHENTICATION_HISTORY_JSON_FILE_PATH);
+    auto webSocketServer = new CPS::WebSocketServer(port);
+
+    // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
+    // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);
+
+    QObject::connect(webSocketServer, &CPS::WebSocketServer::clientAuthenticationRequested, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticate);
+    QObject::connect(monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::authenticated);
+    QObject::connect(monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::unauthenticated, webSocketServer, &CPS::WebSocketServer::unauthenticated);
+
+    QObject::connect(webSocketServer, &CPS::WebSocketServer::historyRequested, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::historyRequested);
+    QObject::connect(rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::historyReady, webSocketServer, &CPS::WebSocketServer::sendHistory);
+
+    QObject::connect(&a, &QCoreApplication::aboutToQuit, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::deleteLater);
+    QObject::connect(&a, &QCoreApplication::aboutToQuit, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::deleteLater);
+    // QObject::connect(httpServer, &CPS::HttpServer::closed, &a, &QCoreApplication::quit);
 
     return a.exec();
 }

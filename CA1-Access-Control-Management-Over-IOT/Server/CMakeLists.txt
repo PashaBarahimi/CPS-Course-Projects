@@ -11,18 +11,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS WebSockets)
 
 add_executable(Server
   main.cpp
   monitoringsystemauthenticator.h monitoringsystemauthenticator.cpp
   monitoringsystemuser.h monitoringsystemuser.cpp
   utils.h utils.cpp
-  monitoringsystemauthenticationitem.h monitoringsystemauthenticationitem.cpp
-  monitoringsystemhistory.h monitoringsystemhistory.cpp
+  rfidauthenticationitem.h rfidauthenticationitem.cpp
+  rfidauthenticationhistory.h rfidauthenticationhistory.cpp
+  websocketserver.h websocketserver.cpp
+  websocketrequest.h websocketrequest.cpp
+  websocketresponse.h websocketresponse.cpp
   data/monitoring_system_history.json
   data/monitoring_system_users.json
 )
 target_link_libraries(Server Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(Server Qt${QT_VERSION_MAJOR}::WebSockets)
 
 include(GNUInstallDirs)
 install(TARGETS Server

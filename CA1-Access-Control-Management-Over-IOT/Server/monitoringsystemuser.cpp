@@ -10,13 +10,9 @@ MonitoringSystemUser::MonitoringSystemUser(const QJsonObject& jsonObject) {
     hashedPassword_ = jsonObject["hashedPassword"].toString();
 }
 
-QString MonitoringSystemUser::username() const {
-    return username_;
-}
+QString MonitoringSystemUser::username() const { return username_; }
 
-QString MonitoringSystemUser::hashedPassword() const {
-    return hashedPassword_;
-}
+QString MonitoringSystemUser::hashedPassword() const { return hashedPassword_; }
 
 QJsonObject MonitoringSystemUser::toJsonObject() const {
     QJsonObject jsonObject;
