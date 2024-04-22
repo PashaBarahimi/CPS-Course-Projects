@@ -18,17 +18,17 @@ int main(int argc, char* argv[]) {
 
     QCommandLineParser parser;
     parser.addHelpOption();
-    QCommandLineOption portOption("port", "Port to listen on", "port", "12345");
-    parser.addOption(portOption);
+    QCommandLineOption webSocketPortOption("websocket_port", "Port for WebSocket server to listen on", "websocket_port", "12345");
+    parser.addOption(webSocketPortOption);
     parser.process(a);
 
-    int port = parser.value(portOption).toInt();
+    int webSocketPort = parser.value(webSocketPortOption).toInt();
 
     qDebug() << "Starting CPS Server";
 
     auto monitoringSystemAuthenticator = new CPS::MonitoringSystemAuthenticator(MONITORING_SYSTEM_USERS_JSON_FILE_PATH);
     auto rfidAuthenticationHistory = new CPS::RfidAuthenticationHistory(RFID_AUTHENTICATION_HISTORY_JSON_FILE_PATH);
-    auto webSocketServer = new CPS::WebSocketServer(port);
+    auto webSocketServer = new CPS::WebSocketServer(webSocketPort);
 
     // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
     // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);

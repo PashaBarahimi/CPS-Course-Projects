@@ -14,6 +14,7 @@ WebSocketServer::WebSocketServer(int port, QObject* parent)
     if (!server_->listen(QHostAddress::Any, port_)) {
         qFatal("Failed to listen on port %d", port_);
     }
+    qInfo() << "Listening on port" << port_;
 
     connect(server_, &QWebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
 }
