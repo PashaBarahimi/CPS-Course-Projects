@@ -1,20 +1,18 @@
 #ifndef CPSTEXTFIELD_H
 #define CPSTEXTFIELD_H
 
-#include <QWidget>
 #include <QLineEdit>
+#include <QString>
+#include <QWidget>
 
 namespace CPS {
 
-class TextField : public QLineEdit
-{
+class TextField : public QLineEdit {
     Q_OBJECT
 public:
-    explicit TextField(const QString &placeholderText, QWidget *parent = nullptr);
-
-signals:
+    explicit TextField(const QString& placeholderText, QWidget* parent = nullptr);
 };
 
-} // end of CPS
+} // namespace CPS
 
 #endif // CPSTEXTFIELD_H

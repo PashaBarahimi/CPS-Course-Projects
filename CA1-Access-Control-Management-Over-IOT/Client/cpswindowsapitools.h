@@ -6,10 +6,10 @@
 #pragma comment(lib, "dwmapi.lib")
 #endif
 
-namespace CPS{
+namespace CPS {
 
 template <typename T>
-void setWindowsThemeToDark(T &window){
+void setWindowsThemeToDark(T& window) {
 #ifdef _WIN32
     const bool dark = true;
     const int value = dark ? 1 : 0;
@@ -17,6 +17,6 @@ void setWindowsThemeToDark(T &window){
 #endif
 }
 
-} // end of CPS
+} // namespace CPS
 
 #endif // CPSWINDOWSAPITOOLS_H

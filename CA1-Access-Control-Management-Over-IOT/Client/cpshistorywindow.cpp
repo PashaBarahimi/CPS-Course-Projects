@@ -1,12 +1,14 @@
 #include "cpshistorywindow.h"
-#include <QCloseEvent>
+
+#include <QColor>
+#include <QJsonObject>
+#include <QPalette>
 
 namespace CPS {
 
-HistoryWindow::HistoryWindow(QWidget *parent)
-    : QWidget{parent},
-    _list(new QListWidget(this))
-{
+HistoryWindow::HistoryWindow(QWidget* parent)
+    : QWidget(parent),
+      list_(new QListWidget(this)) {
     this->setMinimumSize({720, 480});
     this->setMaximumSize({720, 480});
     this->setBackgroundRole(QPalette::Dark);
@@ -19,41 +21,37 @@ HistoryWindow::HistoryWindow(QWidget *parent)
     int width = this->width() - 40;
     int height = this->height() - 40;
 
-    _list->setGeometry(x, y, width,  height);
+    list_->setGeometry(x, y, width, height);
 }
 
-HistoryWindow::~HistoryWindow()
-{
-    delete _list;
+HistoryWindow::~HistoryWindow() {
+    delete list_;
 }
 
-void HistoryWindow::show(const QJsonArray &array)
-{
+void HistoryWindow::show(const QJsonArray& array) {
     uint index = 0;
-    _list->addItem("index\tusername\t|\tdate\t|\ttime");
+    list_->addItem("index\tusername\t|\tdate\t|\ttime");
 
-    for (auto& item : array){
+    for (auto& item : array) {
         index++;
 
-        auto object       = item.toObject();
-        auto structure    = QString("%1-\t%2\t|\t%3\t|\t%4");
+        auto object = item.toObject();
+        auto structure = QString("%1-\t%2\t|\t%3\t|\t%4");
 
-        auto username     = object["username"].toString();
-        auto date         = object["date"].toString();
-        auto time         = object["time"].toString();
+        auto username = object["username"].toString();
+        auto date = object["date"].toString();
+        auto time = object["time"].toString();
 
-        auto entry        = structure.arg(QString::number(index), username, date, time);
-
-        _list->addItem(entry);
+        auto entry = structure.arg(QString::number(index), username, date, time);
+        list_->addItem(entry);
     }
 
     QWidget::show();
 }
 
-void HistoryWindow::closeEvent(QCloseEvent *event)
-{
-    _list->clear();
+void HistoryWindow::closeEvent(QCloseEvent* event) {
+    list_->clear();
     event->accept();
 }
 
-} // end of CPS
+} // namespace CPS

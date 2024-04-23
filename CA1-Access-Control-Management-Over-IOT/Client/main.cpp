@@ -1,7 +1,8 @@
 #include "cpsapplication.h"
 
-int main(int argc, char *argv[])
-{
+#include <QApplication>
+
+int main(int argc, char* argv[]) {
     QApplication qApplication(argc, argv);
 
     CPS::Application application;

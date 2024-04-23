@@ -1,29 +1,28 @@
 #ifndef CPSHISTORYWINDOW_H
 #define CPSHISTORYWINDOW_H
 
-#include <QWidget>
-#include <QListWidget>
+#include <QCloseEvent>
 #include <QJsonArray>
-#include <QJsonObject>
+#include <QListWidget>
+#include <QWidget>
 
 namespace CPS {
 
-class HistoryWindow : public QWidget
-{
+class HistoryWindow : public QWidget {
     Q_OBJECT
 public:
-    explicit HistoryWindow(QWidget *parent = nullptr);
+    explicit HistoryWindow(QWidget* parent = nullptr);
     ~HistoryWindow();
 
-    void show(const QJsonArray &array);
+    void show(const QJsonArray& array);
 
 private:
-    void closeEvent(QCloseEvent * event) override;
+    void closeEvent(QCloseEvent* event) override;
 
 private:
-    QListWidget *_list;
+    QListWidget* list_;
 };
 
-} // end of CPS
+} // namespace CPS
 
 #endif // CPSHISTORYWINDOW_H

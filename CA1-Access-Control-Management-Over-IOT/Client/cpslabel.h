@@ -2,18 +2,17 @@
 #define CPSLABEL_H
 
 #include <QLabel>
+#include <QString>
+#include <QWidget>
+
 namespace CPS {
 
-class Label : public QLabel
-{
+class Label : public QLabel {
     Q_OBJECT
 public:
-    explicit Label(const QString &text, QWidget *parent = nullptr);
-
-signals:
+    explicit Label(const QString& text, QWidget* parent = nullptr);
 };
 
-} // end of CPS
-
+} // namespace CPS
 
 #endif // CPSLABEL_H
