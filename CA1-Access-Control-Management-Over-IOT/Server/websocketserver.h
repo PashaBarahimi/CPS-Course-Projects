@@ -28,6 +28,7 @@ public Q_SLOTS:
     void authenticated();
     void unauthenticated();
     void sendAuthenticatedUser(const RfidAuthenticationItem& item);
+    void sendUnauthenticatedUser(const RfidAuthenticationItem& item);
     void sendHistory(const QJsonArray& history);
 
 private Q_SLOTS:

@@ -10,7 +10,8 @@ public:
     enum class Status {
         Ok = 200,
         BadRequest = 400,
-        Unauthorized = 401
+        Unauthorized = 401,
+        Forbidden = 403,
     };
 
     WebSocketResponse(Status status, const QJsonDocument& data = QJsonDocument());

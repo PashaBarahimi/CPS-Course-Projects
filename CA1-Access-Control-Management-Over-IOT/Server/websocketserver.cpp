@@ -89,6 +89,12 @@ void WebSocketServer::sendAuthenticatedUser(const RfidAuthenticationItem& item) 
     sendTextMessage(response);
 }
 
+void WebSocketServer::sendUnauthenticatedUser(const RfidAuthenticationItem& item) {
+    WebSocketResponse response(WebSocketResponse::Status::Forbidden, QJsonDocument(item.toJsonObject()));
+    qDebug() << "Sending unauthenticated user:" << item.username();
+    sendTextMessage(response);
+}
+
 void WebSocketServer::sendHistory(const QJsonArray& history) {
     WebSocketResponse response(WebSocketResponse::Status::Ok, QJsonDocument(history));
     qDebug() << "Sending history with" << history.size() << "item(s)";

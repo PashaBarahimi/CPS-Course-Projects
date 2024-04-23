@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
 
     // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
     // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);
+    // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::unauthenticated, webSocketServer, &CPS::WebSocketServer::sendUnauthenticatedUser);
 
     QObject::connect(webSocketServer, &CPS::WebSocketServer::clientAuthenticationRequested, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticate);
     QObject::connect(monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::authenticated);
