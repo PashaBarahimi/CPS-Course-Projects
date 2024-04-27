@@ -19,6 +19,11 @@ WebSocketServer::WebSocketServer(int port, QObject* parent)
     connect(server_, &QWebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
 }
 
+WebSocketServer::~WebSocketServer() {
+    server_->close();
+    qInfo() << "Server closed";
+}
+
 void WebSocketServer::onNewConnection() {
     client_ = server_->nextPendingConnection();
     authenticated_ = false;

@@ -14,6 +14,7 @@ class WebSocketServer : public QObject {
     Q_OBJECT
 public:
     WebSocketServer(int port, QObject* parent = nullptr);
+    ~WebSocketServer();
 
 Q_SIGNALS:
     void closed();
