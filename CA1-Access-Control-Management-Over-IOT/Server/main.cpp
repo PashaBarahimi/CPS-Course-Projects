@@ -3,12 +3,15 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QLoggingCategory>
 
+#include "httpserver.h"
 #include "monitoringsystemauthenticator.h"
 #include "rfidauthenticationhistory.h"
+#include "rfidauthenticator.h"
 #include "websocketserver.h"
 
 const QString MONITORING_SYSTEM_USERS_JSON_FILE_PATH = "data/monitoring_system_users.json";
 const QString RFID_AUTHENTICATION_HISTORY_JSON_FILE_PATH = "data/monitoring_system_history.json";
+const QString RFID_TAGS_JSON_FILE_PATH = "data/rfid_tags.json";
 
 int main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
@@ -28,11 +31,14 @@ int main(int argc, char* argv[]) {
 
     auto monitoringSystemAuthenticator = new CPS::MonitoringSystemAuthenticator(MONITORING_SYSTEM_USERS_JSON_FILE_PATH);
     auto rfidAuthenticationHistory = new CPS::RfidAuthenticationHistory(RFID_AUTHENTICATION_HISTORY_JSON_FILE_PATH);
-    auto webSocketServer = new CPS::WebSocketServer(webSocketPort);
+    auto rfidAuthenticator = new CPS::RfidAuthenticator(RFID_TAGS_JSON_FILE_PATH);
 
-    // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
-    // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);
-    // QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::unauthenticated, webSocketServer, &CPS::WebSocketServer::sendUnauthenticatedUser);
+    auto webSocketServer = new CPS::WebSocketServer(webSocketPort);
+    auto httpServer = new CPS::HttpServer(8080, rfidAuthenticator);
+
+    QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
+    QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);
+    QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::unauthenticated, webSocketServer, &CPS::WebSocketServer::sendUnauthenticatedUser);
 
     QObject::connect(webSocketServer, &CPS::WebSocketServer::clientAuthenticationRequested, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticate);
     QObject::connect(monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::authenticated);
