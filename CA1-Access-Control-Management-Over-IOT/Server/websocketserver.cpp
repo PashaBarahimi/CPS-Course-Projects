@@ -47,7 +47,7 @@ void WebSocketServer::processTextMessage(const QString& message) {
         if (data.contains("username") && data.contains("password")) {
             QString username = data["username"].toString();
             QString password = data["password"].toString();
-            emit clientAuthenticationRequested(username, password);
+            Q_EMIT clientAuthenticationRequested(username, password);
             qDebug() << "Authenticating user:" << username;
         }
         else {
@@ -62,7 +62,7 @@ void WebSocketServer::processTextMessage(const QString& message) {
             sendTextMessage(WebSocketResponse(WebSocketResponse::Status::Unauthorized));
             return;
         }
-        emit historyRequested();
+        Q_EMIT historyRequested();
         qDebug() << "History requested";
     }
 

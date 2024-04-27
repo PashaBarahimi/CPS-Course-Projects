@@ -25,7 +25,7 @@ void RfidAuthenticationHistory::historyRequested() {
         array << item.toJsonObject();
     }
 
-    emit historyReady(array);
+    Q_EMIT historyReady(array);
 }
 
 void RfidAuthenticationHistory::loadHistory() {

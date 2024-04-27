@@ -23,12 +23,12 @@ void MonitoringSystemAuthenticator::authenticate(const QString& username, const 
         if (user.username() == username &&
             user.hashedPassword() == hashedPassword) {
             qDebug() << "User" << username << "authenticated";
-            emit authenticated();
+            Q_EMIT authenticated();
             return;
         }
     }
     qDebug() << "User" << username << "not authenticated";
-    emit unauthenticated();
+    Q_EMIT unauthenticated();
 }
 
 void MonitoringSystemAuthenticator::addUser(const QString& username, const QString& password) {
