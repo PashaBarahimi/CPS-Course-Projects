@@ -44,7 +44,9 @@ int main(int argc, char* argv[]) {
     QObject::connect(&a, &QCoreApplication::aboutToQuit, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::deleteLater);
     QObject::connect(&a, &QCoreApplication::aboutToQuit, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::deleteLater);
     QObject::connect(&a, &QCoreApplication::aboutToQuit, webSocketServer, &CPS::WebSocketServer::deleteLater);
-    // QObject::connect(httpServer, &CPS::HttpServer::closed, &a, &QCoreApplication::quit);
+    QObject::connect(&a, &QCoreApplication::aboutToQuit, [&]() {
+        qDebug() << "CPS Server stopped";
+    });
 
     return a.exec();
 }
