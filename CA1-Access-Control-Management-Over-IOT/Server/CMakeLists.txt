@@ -27,8 +27,6 @@ add_executable(Server
   data/monitoring_system_history.json
   data/monitoring_system_users.json
   httpserver.h httpserver.cpp
-  httpresponse.h httpresponse.cpp
-  httprequest.h httprequest.cpp
   rfidauthenticator.h rfidauthenticator.cpp
   data/rfid_tags.json
 )

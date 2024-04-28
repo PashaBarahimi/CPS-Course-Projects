@@ -23,9 +23,12 @@ int main(int argc, char* argv[]) {
     parser.addHelpOption();
     QCommandLineOption webSocketPortOption("websocket_port", "Port for WebSocket server to listen on", "websocket_port", "12345");
     parser.addOption(webSocketPortOption);
+    QCommandLineOption httpPortOption("http_port", "Port for Http server to listen on", "http_port", "54321");
+    parser.addOption(httpPortOption);
     parser.process(a);
 
     int webSocketPort = parser.value(webSocketPortOption).toInt();
+    int httpPort = parser.value(httpPortOption).toInt();
 
     qDebug() << "Starting CPS Server";
 
@@ -34,7 +37,7 @@ int main(int argc, char* argv[]) {
     auto rfidAuthenticator = new CPS::RfidAuthenticator(RFID_TAGS_JSON_FILE_PATH);
 
     auto webSocketServer = new CPS::WebSocketServer(webSocketPort);
-    auto httpServer = new CPS::HttpServer(8080, rfidAuthenticator);
+    auto httpServer = new CPS::HttpServer(httpPort, rfidAuthenticator);
 
     QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
     QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);
