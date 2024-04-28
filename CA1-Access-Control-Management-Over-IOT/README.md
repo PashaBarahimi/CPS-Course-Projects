@@ -25,6 +25,10 @@
     - [Client](#client-1)
   - [How to Run](#how-to-run)
   - [RFID](#rfid)
+    - [RFID Tag](#rfid-tag)
+    - [RFID Reader](#rfid-reader)
+    - [RFID Interface](#rfid-interface)
+    - [RFID in the Project](#rfid-in-the-project)
 
 ## Introduction
 
@@ -797,3 +801,28 @@ Whenever a new connection is made, the `onNewConnection` slot is called which se
 ## How to Run
 
 ## RFID
+
+RFID (Radio Frequency Identification) is a technology that uses radio waves to read and capture information stored on a tag attached to an object. The tag can be read from up to several meters away and does not need to be within the direct line-of-sight of the reader to be tracked. RFID tags are used in many applications, such as access control, inventory management, tracking of goods in supply chains, contactless payment systems, and pet identification.
+
+### RFID Tag
+
+RFID tags are small devices that contain a microchip and an antenna. The microchip stores the information that is read by the RFID reader, and the antenna allows the tag to communicate with the reader. There are two types of RFID tags: active tags and passive tags. Active tags have their own power source (battery) and can transmit data over longer distances. Passive tags do not have a power source and rely on the energy from the RFID reader to transmit data. Passive tags are cheaper and smaller than active tags, but they have a shorter read range.
+
+### RFID Reader
+
+An RFID reader is a device that reads the information stored on an RFID tag. The reader emits radio waves that activate the tag and read the information stored on it. The reader can be fixed or handheld, and it can be connected to a computer or a network to transfer the data read from the tag. The reader can read multiple tags simultaneously and can read tags from a distance of up to several meters away.
+
+### RFID Interface
+
+The RFID readers may have different interfaces to communicate with the computer or network. Some common interfaces are as follows:
+
+- Serial: The reader is connected to the computer via a serial port (RS-232 or RS-485).
+- USB: The reader is connected to the computer via a USB port.
+- Ethernet: The reader is connected to the network via an Ethernet port.
+- Wi-Fi: The reader is connected to the network wirelessly via Wi-Fi.
+
+The choice of interface depends on the application and the requirements of the system. In this project, as we want to connect the RFID reader to an Arduino board, we should choose an RFID reader with a serial interface (RS-232 or RS-485) for the best compatibility with the Arduino board. The RFID reader should also support the communication protocol used by the Arduino board (such as UART) to ensure proper communication between the reader and the board. In UART communication, we need to connect the TX (transmit) pin of the RFID reader to the RX (receive) pin of the Arduino board, and the RX pin of the RFID reader to the TX pin of the Arduino board. We also need to connect the ground (GND) pins of the reader and the board together to complete the circuit. The RFID reader should be powered by an external power source (such as a battery or a power adapter) to ensure proper operation.
+
+### RFID in the Project
+
+If we wanted to use RFID module in our project, we would use UART communication to connect the RFID reader to the Arduino board. In this case, each RFID tag would contain a 10-digit unique identifier that is read by the reader and sent to the Arduino board. However, as Proteus does not have an RFID reader module, we have used a virtual terminal which simulates the RFID reader module and is connected to the Arduino board via serial port.
