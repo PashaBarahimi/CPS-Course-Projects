@@ -8,10 +8,10 @@
 
 namespace CPS {
 
-HttpServer::HttpServer(int port, RfidAuthenticator* rfidAuthenticator, QObject* parent)
-    : QObject{parent}, port_{port}, server_(new QHttpServer()), rfidAuthenticator_(rfidAuthenticator) {
+HttpServer::HttpServer(int port, RfidAuthenticator* rfidAuthenticator)
+    : port_{port}, server_(new QHttpServer()), rfidAuthenticator_(rfidAuthenticator) {
     server_->route("/authentication", [this](const QHttpServerRequest& request) {
-        return this->requestHandler(request);
+        return this->authenticationHandler(request);
     });
 
     start();
@@ -29,7 +29,7 @@ void HttpServer::stop() {
     server_->disconnect();
 }
 
-QHttpServerResponse HttpServer::requestHandler(const QHttpServerRequest& request) {
+QHttpServerResponse HttpServer::authenticationHandler(const QHttpServerRequest& request) {
     qDebug() << "Received request:" << request.url().toString();
 
     QByteArray jsonData = request.body();
@@ -48,13 +48,11 @@ QHttpServerResponse HttpServer::requestHandler(const QHttpServerRequest& request
     RfidAuthenticationItem rfidAuthenticationItem(rfid);
     QJsonDocument responseJsonDoc(rfidAuthenticationItem.toJsonObject());
     QByteArray responseJsonData = responseJsonDoc.toJson();
+    QHttpServerResponse::StatusCode statusCode = rfidAuthenticator_->authenticate(rfidAuthenticationItem)
+                                                     ? QHttpServerResponse::StatusCode::Ok
+                                                     : QHttpServerResponse::StatusCode::Unauthorized;
 
-    if (rfidAuthenticator_->authenticate(rfidAuthenticationItem)) {
-        return QHttpServerResponse(responseJsonData, QHttpServerResponse::StatusCode::Ok);
-    }
-    else {
-        return QHttpServerResponse(responseJsonData, QHttpServerResponse::StatusCode::Unauthorized);
-    }
+    return QHttpServerResponse(responseJsonData, statusCode);
 }
 
 HttpServer::~HttpServer() {

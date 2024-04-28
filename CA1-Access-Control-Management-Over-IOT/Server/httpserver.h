@@ -2,7 +2,6 @@
 #define HTTPSERVER_H
 
 #include <QHttpServer>
-#include <QObject>
 
 #include "rfidauthenticator.h"
 
@@ -11,15 +10,11 @@ namespace CPS {
 class HttpServer : public QObject {
     Q_OBJECT
 public:
-    HttpServer(int port, RfidAuthenticator* rfidAuthenticator, QObject* parent = nullptr);
+    HttpServer(int port, RfidAuthenticator* rfidAuthenticator);
     ~HttpServer();
     void start();
     void stop();
-    QHttpServerResponse requestHandler(const QHttpServerRequest& request);
-
-Q_SIGNALS:
-
-public Q_SLOTS:
+    QHttpServerResponse authenticationHandler(const QHttpServerRequest& request);
 
 private:
     int port_;
