@@ -14,28 +14,30 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        cpsmainwindow.cpp
-        cpsmainwindow.h
+        windows/cpsmainwindow.cpp
+        windows/cpsmainwindow.h
 )
 
-set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
+set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon.rc")
 
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(MonitoringSystem
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        Ut.ico
+        assets/UT.ico
         ${app_icon_resource_windows}
-        cpshistorywindow.h cpshistorywindow.cpp
-        cpstextfield.h cpstextfield.cpp
-        cpsbutton.h cpsbutton.cpp
-        cpslabel.h cpslabel.cpp
-        cpswindowsapitools.h
+        windows/cpshistorywindow.h windows/cpshistorywindow.cpp
+        windows/cpswindowsapitools.h
+        widgets/cpstextfield.h widgets/cpstextfield.cpp
+        widgets/cpsbutton.h widgets/cpsbutton.cpp
+        widgets/cpslabel.h widgets/cpslabel.cpp
+        users/cpsuser.h users/cpsuser.cpp
+        users/cpsrfiduser.h users/cpsrfiduser.cpp
         cpsapplication.h cpsapplication.cpp
     )
 
-set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/Ut.ico")
+set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/assets/UT.ico")
 
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QWidgetsProhect APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

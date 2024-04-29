@@ -12,7 +12,7 @@ HistoryWindow::HistoryWindow(QWidget* parent)
     this->setMinimumSize({720, 480});
     this->setMaximumSize({720, 480});
     this->setBackgroundRole(QPalette::Dark);
-    this->setWindowIcon(QIcon("Ut.ico"));
+    this->setWindowIcon(QIcon("assets/UT.ico"));
     this->setWindowFlag(Qt::CustomizeWindowHint);
     this->setWindowTitle("IoT Monitoring System - History");
     this->setPalette(QPalette(QColor::fromString("#E0E0E0"), QColor::fromString("#121212")));
