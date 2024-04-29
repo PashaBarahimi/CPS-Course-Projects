@@ -3,9 +3,9 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
-#include "cpshistorywindow.h"
-#include "cpsmainwindow.h"
-#include "cpswindowsapitools.h"
+#include "windows/cpshistorywindow.h"
+#include "windows/cpsmainwindow.h"
+#include "windows/cpswindowsapitools.h"
 
 namespace CPS {
 
@@ -14,6 +14,7 @@ Application::Application(QObject* parent)
       window_(new MainWindow),
       history_(new HistoryWindow) {
     setWindowsThemeToDark<MainWindow>(*window_);
+    setWindowsThemeToDark<HistoryWindow>(*history_);
 
     QObject::connect(window_, &MainWindow::historyBtnClicked, this, &Application::showHistoryWindow);
 

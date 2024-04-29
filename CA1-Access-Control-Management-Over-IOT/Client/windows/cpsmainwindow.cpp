@@ -3,27 +3,27 @@
 #include <QColor>
 #include <QPalette>
 
-#include "cpsbutton.h"
-#include "cpslabel.h"
-#include "cpstextfield.h"
+#include "../widgets/cpsbutton.h"
+#include "../widgets/cpslabel.h"
+#include "../widgets/cpstextfield.h"
 
 namespace CPS {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent),
+      connectBtn_(new Button("اتصال به سرور", this)),
       addressInput_(new TextField("آدرس سوکت سرور", this)),
       usernameInput_(new TextField("نام کاربری", this)),
       passwordInput_(new TextField("رمز عبور", this)),
-      connectBtn_(new Button("اتصال به سرور", this)),
 
-      username_(new Label("شناسه کاربری:  __________", this)),
       date_(new Label("تاریخ:  __ / __ / ____", this)),
       time_(new Label("ساعت:  __ : __", this)),
+      username_(new Label("شناسه کاربری:  __________", this)),
       historyBtn_(new Button("نمایش تاریخچه", this)),
 
       mainLayout_(new QHBoxLayout(this)),
-      rightPanel_(new QVBoxLayout(this)),
-      leftPanel_(new QVBoxLayout(this)) {
+      rightPanel_(new QVBoxLayout),
+      leftPanel_(new QVBoxLayout) {
     this->setupConnections();
     this->setupGlobalStyle();
     this->setupWindowLayout();
@@ -59,12 +59,24 @@ void MainWindow::setUsername(const QString& username) {
 }
 
 void MainWindow::changeRightPanelEnabled(bool enabled) {
-    rightPanel_->setEnabled(enabled);
+    // rightPanel_->setEnabled(enabled);
+    for (int i = 0; i < rightPanel_->count(); ++i) {
+        QWidget* widget = rightPanel_->itemAt(i)->widget();
+        if (widget != nullptr) {
+            widget->setEnabled(enabled);
+        }
+    }
+    connectBtn_->color(enabled);
 }
 
-void MainWindow::showUserDetails(const QString& username, const QString& date, const QString& time) {
+void MainWindow::showUserDetails(const QString& username, const QString& date, const QString& time, bool denied) {
     this->setDate(date);
-    this->setTime(time);
+    if (denied) {
+        this->setTime(time + "        (ناموفق!)");
+    }
+    else {
+        this->setTime(time);
+    }
     this->setUsername(username);
 }
 
@@ -83,7 +95,7 @@ void MainWindow::setupGlobalStyle() {
     this->setMinimumSize({720, 480});
     this->setMaximumSize({720, 480});
     this->setBackgroundRole(QPalette::Dark);
-    this->setWindowIcon(QIcon("Ut.ico"));
+    this->setWindowIcon(QIcon("assets/UT.ico"));
     this->setWindowFlag(Qt::CustomizeWindowHint);
     this->setWindowTitle("IoT Monitoring System");
     this->setPalette(QPalette(QColor::fromString("#E0E0E0"), QColor::fromString("#121212")));

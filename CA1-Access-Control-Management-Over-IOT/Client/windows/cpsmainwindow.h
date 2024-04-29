@@ -30,7 +30,7 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void changeRightPanelEnabled(bool enabled);
-    void showUserDetails(const QString& username, const QString& date, const QString& time);
+    void showUserDetails(const QString& username, const QString& date, const QString& time, bool denied);
 
 private:
     void setupConnections();
@@ -52,9 +52,9 @@ private:
     Label* username_;
     Button* historyBtn_;
 
-    QVBoxLayout* leftPanel_;
     QHBoxLayout* mainLayout_;
     QVBoxLayout* rightPanel_;
+    QVBoxLayout* leftPanel_;
 
     const int windowMargin_ = 30;
 };
