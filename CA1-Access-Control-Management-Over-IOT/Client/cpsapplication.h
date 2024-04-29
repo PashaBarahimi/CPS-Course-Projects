@@ -1,7 +1,10 @@
 #ifndef CPSAPPLICATION_H
 #define CPSAPPLICATION_H
 
+#include <QList>
 #include <QObject>
+
+#include "users/cpsrfiduser.h"
 
 namespace CPS {
 
@@ -18,7 +21,7 @@ public:
     void show();
 
 private Q_SLOTS:
-    void showHistoryWindow();
+    void showHistoryWindow(const QList<RfidUser>& history);
 
 private:
     MainWindow* window_;

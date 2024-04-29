@@ -32,6 +32,12 @@ void WebSocketClient::connectToServer(const QString& address, const QString& use
     webSocket_->open(QUrl(address));
 }
 
+void WebSocketClient::sendHistoryRequest() {
+    qInfo() << "Sending history request";
+    WebSocketRequest req(WebSocketRequest::Type::HistoryRequest);
+    sendRequest(req);
+}
+
 void WebSocketClient::wsConnected() {
     qInfo() << "Connected to server";
     sendAuthenticationRequest();
@@ -67,6 +73,11 @@ void WebSocketClient::processTextMessage(const QString& message) {
         }
         break;
     case WebSocketResponse::Type::HistoryResponse:
+        if (response.status() == WebSocketResponse::Status::Ok) {
+            QJsonArray data = response.data().array();
+            QList<RfidUser> list = extractHistory(data);
+            Q_EMIT historyReady(list);
+        }
         break;
     case WebSocketResponse::Type::Rfid:
         QJsonObject user = response.data().object();
@@ -95,6 +106,16 @@ void WebSocketClient::sendAuthenticationRequest() {
 
 void WebSocketClient::sendRequest(const WebSocketRequest& req) {
     webSocket_->sendTextMessage(req.toJsonDocument().toJson(QJsonDocument::Compact));
+}
+
+QList<RfidUser> WebSocketClient::extractHistory(const QJsonArray& history) {
+    QList<RfidUser> list;
+    for (const auto& item : history) {
+        QJsonObject obj = item.toObject();
+        RfidUser user(obj["username"].toString(), obj["date"].toString(), obj["time"].toString());
+        list << user;
+    }
+    return list;
 }
 
 } // namespace CPS
