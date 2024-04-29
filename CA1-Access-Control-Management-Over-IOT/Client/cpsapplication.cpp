@@ -3,6 +3,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
+#include "websocket/cpswebsocketclient.h"
 #include "windows/cpshistorywindow.h"
 #include "windows/cpsmainwindow.h"
 #include "windows/cpswindowsapitools.h"
@@ -12,11 +13,12 @@ namespace CPS {
 Application::Application(QObject* parent)
     : QObject(parent),
       window_(new MainWindow),
-      history_(new HistoryWindow) {
+      history_(new HistoryWindow),
+      webSocketClient_(new WebSocketClient) {
     setWindowsThemeToDark<MainWindow>(*window_);
     setWindowsThemeToDark<HistoryWindow>(*history_);
 
-    QObject::connect(window_, &MainWindow::historyBtnClicked, this, &Application::showHistoryWindow);
+    QObject::connect(window_, &MainWindow::connectBtnClicked, webSocketClient_, &WebSocketClient::connectToServer);
 
     // TODO:
     // QObject::connect(&YourSocketClassInstance, &YourSocketClass::newUser, &window, &MainWindow::showUserDetails);
@@ -27,9 +29,7 @@ Application::Application(QObject* parent)
 Application::~Application() {
     delete this->window_;
     delete this->history_;
-
-    // TODO:
-    // delete this->YourSocketClassInstance_;
+    delete this->webSocketClient_;
 }
 
 void Application::show() {
