@@ -7,6 +7,7 @@ namespace CPS {
 
 class MainWindow;
 class HistoryWindow;
+class WebSocketClient;
 
 class Application : public QObject {
     Q_OBJECT
@@ -22,9 +23,7 @@ private Q_SLOTS:
 private:
     MainWindow* window_;
     HistoryWindow* history_;
-
-    // TODO:
-    // YourSocketClass *_YourSocketClassInstance;
+    WebSocketClient* webSocketClient_;
 };
 
 } // namespace CPS

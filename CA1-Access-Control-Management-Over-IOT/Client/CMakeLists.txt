@@ -33,6 +33,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/cpstextfield.h widgets/cpstextfield.cpp
         widgets/cpsbutton.h widgets/cpsbutton.cpp
         widgets/cpslabel.h widgets/cpslabel.cpp
+        websocket/cpswebsocketclient.h websocket/cpswebsocketclient.cpp
         websocket/cpswebsocketrequest.h websocket/cpswebsocketrequest.cpp
         websocket/cpswebsocketresponse.h websocket/cpswebsocketresponse.cpp
         users/cpsuser.h users/cpsuser.cpp
