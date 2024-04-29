@@ -31,6 +31,7 @@ private Q_SLOTS:
 
 private:
     void closeConnection();
+    void sendAuthenticationRequest();
     void sendRequest(const WebSocketRequest& req);
 
 private:

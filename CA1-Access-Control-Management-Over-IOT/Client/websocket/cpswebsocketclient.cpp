@@ -34,6 +34,7 @@ void WebSocketClient::connectToServer(const QString& address, const QString& use
 
 void WebSocketClient::wsConnected() {
     qInfo() << "Connected to server";
+    sendAuthenticationRequest();
 }
 
 void WebSocketClient::wsDisconnected() {
@@ -60,6 +61,10 @@ void WebSocketClient::processTextMessage(const QString& message) {
     case WebSocketResponse::Type::Unknown:
         break;
     case WebSocketResponse::Type::Authenticate:
+        if (response.status() != WebSocketResponse::Status::Ok) {
+            qInfo() << "Invalid authentication";
+            closeConnection();
+        }
         break;
     case WebSocketResponse::Type::HistoryResponse:
         break;
@@ -73,6 +78,12 @@ void WebSocketClient::closeConnection() {
     delete user_;
     user_ = nullptr;
     Q_EMIT connectionChanged(true);
+}
+
+void WebSocketClient::sendAuthenticationRequest() {
+    qInfo() << "Sending authentication request";
+    WebSocketRequest req(WebSocketRequest::Type::Authenticate, user_->toJsonObject());
+    sendRequest(req);
 }
 
 void WebSocketClient::sendRequest(const WebSocketRequest& req) {
