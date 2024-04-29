@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS WebSockets)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -32,6 +33,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/cpstextfield.h widgets/cpstextfield.cpp
         widgets/cpsbutton.h widgets/cpsbutton.cpp
         widgets/cpslabel.h widgets/cpslabel.cpp
+        websocket/cpswebsocketrequest.h websocket/cpswebsocketrequest.cpp
         users/cpsuser.h users/cpsuser.cpp
         users/cpsrfiduser.h users/cpsrfiduser.cpp
         cpsapplication.h cpsapplication.cpp
@@ -63,7 +65,7 @@ else()
     target_link_libraries(MonitoringSystem PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 endif()
 
-# target_link_libraries(QWidgetsProhect PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(MonitoringSystem PRIVATE Qt${QT_VERSION_MAJOR}::WebSockets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
