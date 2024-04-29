@@ -1,10 +1,11 @@
 #include "cpslabel.h"
 
+#include <QFont>
+
 namespace CPS {
 
-Label::Label(const QString &text, QWidget *parent)
-    : QLabel{parent}
-{
+Label::Label(const QString& text, QWidget* parent)
+    : QLabel(parent) {
     QFont fontInput;
     fontInput.setPixelSize(20);
     fontInput.setBold(false);
@@ -16,4 +17,4 @@ Label::Label(const QString &text, QWidget *parent)
     this->setText(text);
 }
 
-} // end of CPS
+} // namespace CPS

@@ -1,66 +1,69 @@
 #include "cpsapplication.h"
 
+#include <QJsonArray>
+#include <QJsonObject>
+
+#include "windows/cpshistorywindow.h"
+#include "windows/cpsmainwindow.h"
+#include "windows/cpswindowsapitools.h"
+
 namespace CPS {
 
-Application::Application(QObject *parent)
-    : QObject{parent},
-    _window(new MainWindow),
-    _history(new HistoryWindow)
-{
-    setWindowsThemeToDark<MainWindow>(*_window);
+Application::Application(QObject* parent)
+    : QObject(parent),
+      window_(new MainWindow),
+      history_(new HistoryWindow) {
+    setWindowsThemeToDark<MainWindow>(*window_);
+    setWindowsThemeToDark<HistoryWindow>(*history_);
 
-    QObject::connect(_window, &MainWindow::historyuBtnClicked, this, &Application::showHistoryWindow);
+    QObject::connect(window_, &MainWindow::historyBtnClicked, this, &Application::showHistoryWindow);
 
     // TODO:
     // QObject::connect(&YourSocketClassInstance, &YourSocketClass::newUser, &window, &MainWindow::showUserDetails);
     // QObject::connect(&window, &MainWindow::connectBtnClicked, &YourSocketClassInstance, &YourSocketClass::connectToServer);
     // QObject::connect(&YourSocketClassInstance, &YourSocketClass::connectionChanged, &window, &MainWindow::changeRightPanelEnabled);
-
 }
 
-Application::~Application()
-{
-    delete this->_window;
-    delete this->_history;
+Application::~Application() {
+    delete this->window_;
+    delete this->history_;
 
-    //TODO:
-    //delete this->_YourSocketClassInstance;
+    // TODO:
+    // delete this->YourSocketClassInstance_;
 }
 
-void Application::show()
-{
-    this->_window->show();
+void Application::show() {
+    this->window_->show();
 }
 
-void Application::showHistoryWindow()
-{
-    setWindowsThemeToDark<HistoryWindow>(*_history);
+void Application::showHistoryWindow() {
+    setWindowsThemeToDark<HistoryWindow>(*history_);
 
     // TODO:
     /*
-         * fetch data from server and show it in history window.
-         * your data must be in QJsonArray format.
-         * something like this:
-         *
-         * [
-         *     {
-         *          username: string,
-         *          date: string,
-         *          time: string,
-         *     },
-         *
-         *     {
-         *          username: string,
-         *          date: string,
-         *          time: string,
-         *     }
-         * ]
-         *
-         *  below is an example of how to create a QJsonArray from QVariantList: (beginer level)
-         *  please erase this horrible example and implement your own logic.
-         *  you must fetch a json from server
-         *
-         * */
+     * fetch data from server and show it in history window.
+     * your data must be in QJsonArray format.
+     * something like this:
+     *
+     * [
+     *     {
+     *          username: string,
+     *          date: string,
+     *          time: string,
+     *     },
+     *
+     *     {
+     *          username: string,
+     *          date: string,
+     *          time: string,
+     *     }
+     * ]
+     *
+     *  below is an example of how to create a QJsonArray from QVariantList: (beginner level)
+     *  please erase this horrible example and implement your own logic.
+     *  you must fetch a json from server
+     *
+     * */
 
     QJsonObject obj1;
     QJsonObject obj2;
@@ -85,7 +88,7 @@ void Application::showHistoryWindow()
 
     QJsonArray data = QJsonArray::fromVariantList(list);
 
-    _history->show(data);
+    history_->show(data);
 }
 
-} // end of CPS
+} // namespace CPS
