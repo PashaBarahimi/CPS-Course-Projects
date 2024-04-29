@@ -34,6 +34,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         widgets/cpsbutton.h widgets/cpsbutton.cpp
         widgets/cpslabel.h widgets/cpslabel.cpp
         websocket/cpswebsocketrequest.h websocket/cpswebsocketrequest.cpp
+        websocket/cpswebsocketresponse.h websocket/cpswebsocketresponse.cpp
         users/cpsuser.h users/cpsuser.cpp
         users/cpsrfiduser.h users/cpsrfiduser.cpp
         cpsapplication.h cpsapplication.cpp
