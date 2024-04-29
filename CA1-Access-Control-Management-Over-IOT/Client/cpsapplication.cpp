@@ -20,9 +20,7 @@ Application::Application(QObject* parent)
 
     QObject::connect(window_, &MainWindow::connectBtnClicked, webSocketClient_, &WebSocketClient::connectToServer);
 
-    // TODO:
-    // QObject::connect(&YourSocketClassInstance, &YourSocketClass::newUser, &window, &MainWindow::showUserDetails);
-    // QObject::connect(&window, &MainWindow::connectBtnClicked, &YourSocketClassInstance, &YourSocketClass::connectToServer);
+    QObject::connect(webSocketClient_, &WebSocketClient::newUser, window_, &MainWindow::showUserDetails);
     QObject::connect(webSocketClient_, &WebSocketClient::connectionChanged, window_, &MainWindow::changeRightPanelEnabled);
 }
 

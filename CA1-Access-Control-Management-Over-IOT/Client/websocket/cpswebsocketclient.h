@@ -18,6 +18,7 @@ public:
     ~WebSocketClient();
 
 Q_SIGNALS:
+    void newUser(const QString& username, const QString& date, const QString& time, bool denied);
     void connectionChanged(bool enabled);
 
 public Q_SLOTS:

@@ -69,6 +69,13 @@ void WebSocketClient::processTextMessage(const QString& message) {
     case WebSocketResponse::Type::HistoryResponse:
         break;
     case WebSocketResponse::Type::Rfid:
+        QJsonObject user = response.data().object();
+        if (response.status() == WebSocketResponse::Status::Ok) {
+            Q_EMIT newUser(user["username"].toString(), user["date"].toString(), user["time"].toString(), false);
+        }
+        else if (response.status() == WebSocketResponse::Status::Forbidden) {
+            Q_EMIT newUser(user["username"].toString(), user["date"].toString(), user["time"].toString(), true);
+        }
         break;
     }
 }
