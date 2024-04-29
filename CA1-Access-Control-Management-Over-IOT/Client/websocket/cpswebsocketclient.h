@@ -2,9 +2,12 @@
 #define CPSWEBSOCKETCLIENT_H
 
 #include <QJsonArray>
+#include <QList>
 #include <QObject>
 #include <QString>
 #include <QWebSocket>
+
+#include "../users/cpsrfiduser.h"
 
 namespace CPS {
 
@@ -18,10 +21,13 @@ public:
     ~WebSocketClient();
 
 Q_SIGNALS:
+    void newUser(const QString& username, const QString& date, const QString& time, bool denied);
+    void historyReady(const QList<RfidUser>& history);
     void connectionChanged(bool enabled);
 
 public Q_SLOTS:
     void connectToServer(const QString& address, const QString& username, const QString& password);
+    void sendHistoryRequest();
 
 private Q_SLOTS:
     void wsConnected();
@@ -31,7 +37,9 @@ private Q_SLOTS:
 
 private:
     void closeConnection();
+    void sendAuthenticationRequest();
     void sendRequest(const WebSocketRequest& req);
+    QList<RfidUser> extractHistory(const QJsonArray& history);
 
 private:
     QWebSocket* webSocket_;
