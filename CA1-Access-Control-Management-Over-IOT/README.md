@@ -23,7 +23,6 @@
         - [WebSocket Response](#websocket-response)
         - [WebSocket Server](#websocket-server-2)
     - [Client](#client-1)
-  - [How to Run](#how-to-run)
   - [RFID](#rfid)
     - [RFID Tag](#rfid-tag)
     - [RFID Reader](#rfid-reader)
@@ -797,8 +796,6 @@ void WebSocketServer::sendTextMessage(const WebSocketResponse& response) {
 Whenever a new connection is made, the `onNewConnection` slot is called which sets the `authenticated` flag to false and connects the `textMessageReceived` signal to the `processTextMessage` slot and the `disconnected` signal to the `socketDisconnected` slot. The `processTextMessage` slot processes the text message received from the client. If the message is an `authenticate` message, it emits the `clientAuthenticationRequested` signal with the username and password of the user. If the message is a `history_request` message, it checks if the user is authenticated and emits the `historyRequested` signal. If the message is neither an `authenticate` message nor a `history_request` message, it sends a `BadRequest` response. The `authenticated` slot sets the `authenticated` flag to true and sends an `Ok` response. The `unauthenticated` slot sets the `authenticated` flag to false and sends an `Unauthorized` response. The `sendAuthenticatedUser` slot sends an `Ok` response with the authenticated user. The `sendUnauthenticatedUser` slot sends a `Forbidden` response with the unauthenticated user. The `sendHistory` slot sends an `Ok` response with the history. The `sendTextMessage` slot sends the response to the client.
 
 ### Client
-
-## How to Run
 
 ## RFID
 
