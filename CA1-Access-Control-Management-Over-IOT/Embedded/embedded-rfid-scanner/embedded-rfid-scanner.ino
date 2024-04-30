@@ -1,11 +1,14 @@
 #include <AltSoftSerial.h>
 #include <LiquidCrystal.h>
 
-AltSoftSerial rfidScanner;
-auto& server = Serial;
+AltSoftSerial ethernetModule;
+auto& rfidScanner = Serial;
 LiquidCrystal lcd(11, 10, 5, 4, 3, 2);
 
-const char* CONFIRMATION_MSG = "ok";
+const char SERVER_OK[] PROGMEM = "ok";
+const char SERVER_FORBIDDEN[] PROGMEM = "forbidden";
+
+
 const int RFID_LEN = 10;
 const unsigned long MOTOR_DELAY = 1000;
 
@@ -13,14 +16,15 @@ const unsigned long OPEN_DOOR_DURATION = 3000;
 const unsigned long GREEN_LIGHT_DURATION = 2000;
 const unsigned long RED_LIGHT_DURATION = 2000;
 const unsigned long LCD_PRINTING_DUARTION = 3000;
+const unsigned long SERVER_TIME_OUT = 1000;
 
 const int GREEN_LED_PORT = 13;
 const int RED_LED_PORT = 12;
 const int MOTOR_PORT_1 = 7;
 const int MOTOR_PORT_2 = 6;
 
-const char* LCD_ACCESS_GRANTED_MSG = "Access Granted!";
-const char* LCD_ACCESS_DENIED_MSG = "Access Denied!";
+const char LCD_ACCESS_GRANTED_MSG[] PROGMEM = "Access Granted!";
+const char LCD_ACCESS_DENIED_MSG[] PROGMEM = "Access Denied!";
 
 struct State {
   bool isDoorOpen = false;
@@ -36,11 +40,44 @@ struct State {
   unsigned long lastTimeLcdPrinted;
 };
 
+bool isValidServerCommand(const char* command) {
+  return (strcmp_P(command, SERVER_OK) == 0) || (strcmp_P(command, SERVER_FORBIDDEN) == 0);
+}
+
+int readServerCommand(char buffer[], int maxLen, unsigned long timeOut) {
+  unsigned long start = millis();
+  int counter = 0;
+
+  while (true) {
+    if (millis() - start > timeOut)
+      break;
+    if (counter >= maxLen)
+      break;
+    if (!ethernetModule.available())
+      continue;
+
+    buffer[counter++] = (char)ethernetModule.read();
+    if (isValidServerCommand(buffer))
+      break;
+  }
+
+  return counter;
+}
+
+int readRfid(char buffer[]) {
+  static int bufferCounter = 0;
+  if (rfidScanner.available()) {
+    bufferCounter %= RFID_LEN;
+    buffer[bufferCounter++] = rfidScanner.read();
+  }
+
+  return bufferCounter;
+}
 
 void openDoor(State& state) {
   if (state.isDoorOpen)
     return;
-  
+
   digitalWrite(MOTOR_PORT_1, HIGH);
   digitalWrite(MOTOR_PORT_2, LOW);
   delay(MOTOR_DELAY);
@@ -51,7 +88,7 @@ void openDoor(State& state) {
 void closeDoor(State& state) {
   if (!state.isDoorOpen)
     return;
-  
+
   digitalWrite(MOTOR_PORT_1, LOW);
   digitalWrite(MOTOR_PORT_2, HIGH);
   delay(MOTOR_DELAY);
@@ -59,19 +96,10 @@ void closeDoor(State& state) {
   digitalWrite(MOTOR_PORT_2, LOW);
 }
 
-int readRfid(char buffer[]) {
-  static int bufferCounter = 0;
-
-  if (rfidScanner.available()) {
-    bufferCounter %= RFID_LEN;
-    buffer[bufferCounter++] = rfidScanner.read();
-  }
-
-  return bufferCounter;
-}
-
 void sendToServer(const char rfid[]) {
-  server.write(rfid);
+  rfidScanner.print("Sending to server: ");
+  rfidScanner.println(rfid);
+  ethernetModule.write(rfid);
 }
 
 void grantAccess(State& state) {
@@ -104,15 +132,16 @@ void denyAccess(State& state) {
 }
 
 void executeServerCommand(State& state) {
-  while(!server.available())
-    ;
-  
-  char buffer[128] = {0};
-  server.readBytes(buffer, 128);
-  if (!strcmp(buffer, CONFIRMATION_MSG)) {
-    grantAccess(state);
+  char command[128] = { 0 };
+  int len = readServerCommand(command, 127, SERVER_TIME_OUT);
+  if (len) {
+    rfidScanner.println("Server Command:");
+    rfidScanner.println(command);
   }
-  else {
+
+  if (!strcmp_P(command, SERVER_OK)) {
+    grantAccess(state);
+  } else if (!strcmp_P(command, SERVER_FORBIDDEN)) {
     denyAccess(state);
   }
 }
@@ -125,13 +154,13 @@ void stabalize(State& state) {
       closeDoor(state);
       state.isDoorOpen = false;
     }
-  
+
   if (state.isGreenLightOn)
     if (currentTime - state.lastTimeGreenLightTurnedOn >= GREEN_LIGHT_DURATION) {
       digitalWrite(GREEN_LED_PORT, LOW);
       state.isGreenLightOn = false;
     }
-  
+
   if (state.isRedLightOn)
     if (currentTime - state.lastTimeRedLightTurnedOn >= RED_LIGHT_DURATION) {
       digitalWrite(RED_LED_PORT, LOW);
@@ -147,7 +176,7 @@ void stabalize(State& state) {
 
 
 void setup() {
-  Serial.begin(9600);
+  ethernetModule.begin(9600);
   rfidScanner.begin(9600);
 
   pinMode(GREEN_LED_PORT, OUTPUT);
@@ -161,11 +190,11 @@ void setup() {
 
 void loop() {
   static State currentState;
-  static char rfidBuff[13] = {0};
+  static char rfidBuff[11] = { 0 };
   static bool isSentToServer = false;
 
   int rfidLen = readRfid(rfidBuff);
-  
+
   if (rfidLen != RFID_LEN)
     isSentToServer = false;
   if (!isSentToServer && rfidLen == RFID_LEN) {
