@@ -16,8 +16,8 @@ const QString RFID_TAGS_JSON_FILE_PATH = "data/rfid_tags.json";
 int main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
 
-    qSetMessagePattern("%{time} [%{type}] %{appname}: %{message}");
-    QLoggingCategory::setFilterRules("*.debug=true");
+    qSetMessagePattern("%{function} -> %{time} [%{type}] %{appname}: %{message}");
+    QLoggingCategory::setFilterRules("*.debug=false");
 
     QCommandLineParser parser;
     parser.addHelpOption();
