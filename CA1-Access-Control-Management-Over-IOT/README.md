@@ -16,6 +16,8 @@
     - [Proteus](#proteus-1)
     - [Server](#server-1)
       - [HTTP Server](#http-server-1)
+        - [RFID Authenticator](#rfid-authenticator)
+        - [HttpServer](#httpserver)
       - [WebSocket Server](#websocket-server-1)
         - [Monitoring System User](#monitoring-system-user)
         - [Monitoring System Authenticator](#monitoring-system-authenticator)
@@ -253,8 +255,245 @@ The format of the data transmitted between the server and the client is explaine
 ### Proteus
 
 ### Server
+In main.cpp, at the beginning of the file, the command line arguments are parsed to get the port numbers for the WebSocket server and the HTTP server. The default port numbers are 12345 and 54321 respectively. The monitoring system authenticator, the RFID authentication history, and the RFID authenticator are created with the following code:
+
+```cpp
+auto monitoringSystemAuthenticator = new CPS::MonitoringSystemAuthenticator(MONITORING_SYSTEM_USERS_JSON_FILE_PATH);
+auto rfidAuthenticationHistory = new CPS::RfidAuthenticationHistory(RFID_AUTHENTICATION_HISTORY_JSON_FILE_PATH);
+auto rfidAuthenticator = new CPS::RfidAuthenticator(RFID_TAGS_JSON_FILE_PATH);
+```
+
+The WebSocket server and the HTTP server are created with the following code:
+
+```cpp
+auto webSocketServer = new CPS::WebSocketServer(webSocketPort);
+auto httpServer = new CPS::HttpServer(httpPort, rfidAuthenticator);
+```
+
+The signals and slots are connected with the following code:
+
+```cpp
+QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::addItem);
+QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::sendAuthenticatedUser);
+QObject::connect(rfidAuthenticator, &CPS::RfidAuthenticator::unauthenticated, webSocketServer, &CPS::WebSocketServer::sendUnauthenticatedUser);
+
+QObject::connect(webSocketServer, &CPS::WebSocketServer::clientAuthenticationRequested, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticate);
+QObject::connect(monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::authenticated, webSocketServer, &CPS::WebSocketServer::authenticated);
+QObject::connect(monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::unauthenticated, webSocketServer, &CPS::WebSocketServer::unauthenticated);
+
+QObject::connect(webSocketServer, &CPS::WebSocketServer::historyRequested, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::historyRequested);
+QObject::connect(rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::historyReady, webSocketServer, &CPS::WebSocketServer::sendHistory);
+```
+
+The monitoring system authenticator, the RFID authentication history, the WebSocket server, and the HTTP server are deleted when the application is about to quit with the following code:
+
+```cpp
+QObject::connect(&a, &QCoreApplication::aboutToQuit, monitoringSystemAuthenticator, &CPS::MonitoringSystemAuthenticator::deleteLater);
+QObject::connect(&a, &QCoreApplication::aboutToQuit, rfidAuthenticationHistory, &CPS::RfidAuthenticationHistory::deleteLater);
+QObject::connect(&a, &QCoreApplication::aboutToQuit, webSocketServer, &CPS::WebSocketServer::deleteLater);
+QObject::connect(&a, &QCoreApplication::aboutToQuit, [&]() {
+    qDebug() << "CPS Server stopped";
+});
+```
+
+The server is started with the following code:
+
+```cpp
+return a.exec();
+```
+
+
 
 #### HTTP Server
+
+##### RFID Authenticator
+
+This class has the header file `rfidauthenticator.h` and the implementation file `rfidauthenticator.cpp`. It is responsible for authenticating the users that are trying to access the secure area. The header file contains the following:
+
+```cpp
+#ifndef RFIDAUTHENTICATOR_H
+#define RFIDAUTHENTICATOR_H
+
+#include <QObject>
+#include <QString>
+
+#include "rfidauthenticationitem.h"
+
+namespace CPS {
+
+class RfidAuthenticator : public QObject {
+    Q_OBJECT
+public:
+    RfidAuthenticator(const QString& jsonFilePath);
+    bool authenticate(const RfidAuthenticationItem& rfidAuthenticationItem);
+
+Q_SIGNALS:
+    void authenticated(RfidAuthenticationItem item);
+    void unauthenticated(RfidAuthenticationItem item);
+
+private:
+    void LoadTags();
+
+private:
+    QString jsonFilePath_;
+    QList<QString> rfidTags_;
+};
+
+} // namespace CPS
+
+#endif // RFIDAUTHENTICATOR_H
+```
+
+`LoadTags` method is responsible for loading the RFID tags from the json file. The `authenticate` method is responsible for authenticating the user using the RFID tag information. It emits the authenticated signal if the user is authenticated and the unauthenticated signal if the user is not authenticated. The implementation file contains the following:
+
+
+```cpp
+#include "rfidauthenticator.h"
+
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+#include "utils.h"
+
+namespace CPS {
+
+RfidAuthenticator::RfidAuthenticator(const QString& jsonFilePath)
+    : jsonFilePath_(jsonFilePath) {
+    LoadTags();
+}
+
+bool RfidAuthenticator::authenticate(const RfidAuthenticationItem& rfidAuthenticationItem) {
+    if (rfidTags_.contains(rfidAuthenticationItem.username())) {
+        emit authenticated(rfidAuthenticationItem);
+        return true;
+    }
+    else {
+        emit unauthenticated(rfidAuthenticationItem);
+        return false;
+    }
+}
+
+void RfidAuthenticator::LoadTags() {
+    qDebug() << "Loading tags from" << jsonFilePath_;
+    QByteArray jsonFile = Utils::readFile(jsonFilePath_);
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(jsonFile);
+    QJsonArray array = jsonDocument.array();
+
+    for (const QJsonValue& value : array) {
+        rfidTags_ << value.toString();
+        qDebug() << "Tag" << value.toString() << "loaded";
+    }
+}
+
+} // namespace CPS
+```
+
+##### HttpServer
+
+This class has the header file `httpserver.h` and the implementation file `httpserver.cpp`. It is responsible for handling the HTTP requests from the embedded system. The header file contains the following:
+
+```cpp
+#ifndef HTTPSERVER_H
+#define HTTPSERVER_H
+
+#include <QHttpServer>
+
+#include "rfidauthenticator.h"
+
+namespace CPS {
+
+class HttpServer : public QObject {
+    Q_OBJECT
+public:
+    HttpServer(int port, RfidAuthenticator* rfidAuthenticator);
+    ~HttpServer();
+    void start();
+    void stop();
+    QHttpServerResponse authenticationHandler(const QHttpServerRequest& request);
+
+private:
+    int port_;
+    QHttpServer* server_;
+    RfidAuthenticator* rfidAuthenticator_;
+};
+
+} // namespace CPS
+
+#endif // HTTPSERVER_H
+```
+It can be constructed using the port that the server will listen on and the `RfidAuthenticator` object that is responsible for authenticating the users. It has a method `start` that starts the server, a method `stop` that stops the server, and a method `authenticationHandler` that handles the authentication request. The implementation file contains the following:
+    
+```cpp
+#include "httpserver.h"
+
+#include <QHttpServerRequest>
+#include <QHttpServerResponse>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+namespace CPS {
+
+HttpServer::HttpServer(int port, RfidAuthenticator* rfidAuthenticator)
+    : port_{port}, server_(new QHttpServer()), rfidAuthenticator_(rfidAuthenticator) {
+    server_->route("/authentication", [this](const QHttpServerRequest& request) {
+        return this->authenticationHandler(request);
+    });
+
+    start();
+}
+
+void HttpServer::start() {
+    if (!server_->listen(QHostAddress::Any, port_)) {
+        qFatal("Failed to listen on port %d", port_);
+        return;
+    }
+    qInfo() << "Listening on port" << port_;
+}
+
+void HttpServer::stop() {
+    server_->disconnect();
+}
+
+QHttpServerResponse HttpServer::authenticationHandler(const QHttpServerRequest& request) {
+    qDebug() << "Received request:" << request.url().toString();
+
+    QByteArray jsonData = request.body();
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData);
+
+    if (!jsonDoc.isObject()) {
+        return QHttpServerResponse(QByteArray("Error: JSON is not an object"), QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QJsonObject jsonObj = jsonDoc.object();
+    if (!jsonObj.contains("rfid") || !jsonObj["rfid"].isString()) {
+        return QHttpServerResponse(QByteArray("Error: JSON object does not contain a 'rfid' string"), QHttpServerResponse::StatusCode::BadRequest);
+    }
+
+    QString rfid = jsonObj["rfid"].toString();
+    RfidAuthenticationItem rfidAuthenticationItem(rfid);
+    QJsonDocument responseJsonDoc(rfidAuthenticationItem.toJsonObject());
+    QByteArray responseJsonData = responseJsonDoc.toJson();
+    QHttpServerResponse::StatusCode statusCode = rfidAuthenticator_->authenticate(rfidAuthenticationItem)
+                                                     ? QHttpServerResponse::StatusCode::Ok
+                                                     : QHttpServerResponse::StatusCode::Unauthorized;
+
+    return QHttpServerResponse(responseJsonData, statusCode);
+}
+
+HttpServer::~HttpServer() {
+    server_->deleteLater();
+}
+
+} // namespace CPS
+```
+
+The server is started in the constructor and stopped in the destructor. The server listens on the port provided in the constructor.
+
+The `authenticationHandler` method handles the authentication request. It reads the RFID tag information from the request and creates an `RfidAuthenticationItem` object. It then authenticates the user using the `RfidAuthenticator` object and sends a response back to the embedded system with the user information. The server listens on the `/authentication` route and responds with a status code of 200 (OK) if the user is authenticated and 401 (Unauthorized) if the user is not authenticated.
+
+
 
 #### WebSocket Server
 
