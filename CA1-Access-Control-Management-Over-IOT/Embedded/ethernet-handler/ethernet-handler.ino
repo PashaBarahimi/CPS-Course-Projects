@@ -7,8 +7,8 @@ auto& logTerminal = Serial;
 const int BAUD_RATE = 9600;
 const int RFID_LENGHT = 10;
 
-const char SERVER_AUTHENTICATION_PATH[] PROGMEM = "/authenticate";
-const char RFID_TEMPLATE[] = "rfid: %s";
+const char SERVER_AUTHENTICATION_PATH[] PROGMEM = "/authentication";
+const char RFID_TEMPLATE[] = "{ rfid: %s }";
 const int RFID_MSG_LEN = 16;
 
 const char OK_CALLBACK[] = "ok";
@@ -49,16 +49,18 @@ byte httpPostSend(const char* payload, const char* path, const char* website) {
 
   Stash::prepare(
     PSTR(
-      "POST http://$F/$F HTTP/1.0"
-      "\n"
+      "POST $F HTTP/1.1"
+      "\r\n"
       "Host: $F"
-      "\n"
+      "\r\n"
+      "Accept: */*"
+      "\r\n"
       "Content-Length: $D"
-      "\n"
+      "\r\n"
       "Content-Type: application/x-www-form-urlencoded"
-      "\n"
+      "\r\n"
       "$H"),
-    website, path, website, stash.size(), sd);
+    path, website, stash.size(), sd);
 
   return ether.tcpSend();
 }
@@ -77,6 +79,9 @@ byte sendToServer(const char rfid[]) {
 }
 
 ServerRespone handleServerResponse(const char* message) {
+  logTerminal.print("Received packet: ");
+  logTerminal.println(message);
+
   if (message == "Ok")
     return { ServerRespone::Status::ok };
   if (message == "Forbidden")
