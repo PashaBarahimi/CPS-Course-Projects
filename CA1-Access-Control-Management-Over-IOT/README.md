@@ -154,6 +154,19 @@ the first part is the call to the `packetLoop` and `packetReceive`. These two to
 
 ### Proteus
 
+The whole diagram created in Proteus is as below:
+
+![Proteus Diagram](./assets/proteus-diagram.png)
+
+It consists of two Arduinos, on for embedding RFID Scanner, and the other for connecting the ethernet module. There is a dc motor to open and close the door. There are also green and red lights and an lcd to inform the user of the authentication result. A virtual terminal is used to act as an RFID scanner.
+The ethernet module is connected to one of the Arduinos and it's IP is set to `192.168.2.1` as the picture below shows:
+
+![Ethernet Module IP](./assets/ethernte-module-ip.png)
+
+This is the gateway IP that Arduino will use to send its requests to the server. This also the same IP as the KM-Test loopback adaptor installed on the localhost to test and simulate the whole system on a single machine. The picture below shows a part of the Proteus simulation:
+
+![Proteus Simulation](./assets/proteus-running.png)
+
 ### Server
 
 #### HTTP Server
