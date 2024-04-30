@@ -8,8 +8,11 @@ const int BAUD_RATE = 9600;
 const int RFID_LENGHT = 10;
 
 const char SERVER_AUTHENTICATION_PATH[] PROGMEM = "/authentication";
-const char RFID_TEMPLATE[] = "{ rfid: %s }";
+const char RFID_TEMPLATE[] = "{ \"rfid\": \"%s\" }";
 const int RFID_MSG_LEN = 16;
+
+const char SERVER_OK[] PROGMEM = "HTTP/1.1 200 OK";
+const char SERVER_UNAUTHORIZED[] PROGMEM = "HTTP/1.1 401 Unauthorized";
 
 const char OK_CALLBACK[] = "ok";
 const char FORBIDDEN_CALLBACK[] = "forbidden";
@@ -19,14 +22,14 @@ const byte gateway[] = { 192, 168, 2, 1 };
 const byte mac[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
 
 const byte serverIp[] = { 192, 168, 2, 1 };
-const char website[] PROGMEM = "localhost";
+const char website[] PROGMEM = "127.0.0.1";
 
 byte Ethernet::buffer[700];
 Stash stash;
 
 unsigned long timer;
 
-struct ServerRespone {
+struct ServerResponse {
   enum class Status {
     ok,
     forbidden,
@@ -57,8 +60,8 @@ byte httpPostSend(const char* payload, const char* path, const char* website) {
       "\r\n"
       "Content-Length: $D"
       "\r\n"
-      "Content-Type: application/x-www-form-urlencoded"
-      "\r\n"
+      "Content-Type: application/json"
+      "\r\n" "\r\n"
       "$H"),
     path, website, stash.size(), sd);
 
@@ -78,34 +81,34 @@ byte sendToServer(const char rfid[]) {
   return httpPostSend(msg, SERVER_AUTHENTICATION_PATH, website);
 }
 
-ServerRespone handleServerResponse(const char* message) {
-  logTerminal.print("Received packet: ");
+ServerResponse handleServerResponse(const char* message) {
+  logTerminal.println("Received packet: ");
   logTerminal.println(message);
 
-  if (message == "Ok")
-    return { ServerRespone::Status::ok };
-  if (message == "Forbidden")
-    return { ServerRespone::Status::forbidden };
+  if (!strncasecmp_P(message, SERVER_OK, strlen_P(SERVER_OK)))
+    return { ServerResponse::Status::ok };
+  if (!strncasecmp_P(message, SERVER_UNAUTHORIZED, strlen_P(SERVER_UNAUTHORIZED)))
+    return { ServerResponse::Status::forbidden };
 
-  return { ServerRespone::Status::badRequest };
+  return { ServerResponse::Status::badRequest };
 }
 
-void callback(const ServerRespone& serverResponse) {
-  if (serverResponse.status == ServerRespone::Status::ok) {
+void callback(const ServerResponse& serverResponse) {
+  if (serverResponse.status == ServerResponse::Status::ok) {
     logTerminal.print("Calling back: ");
     logTerminal.println(OK_CALLBACK);
 
     rfidModule.print(OK_CALLBACK);
   }
 
-  else if (serverResponse.status == ServerRespone::Status::forbidden) {
+  else if (serverResponse.status == ServerResponse::Status::forbidden) {
     logTerminal.print("Calling back: ");
     logTerminal.println(FORBIDDEN_CALLBACK);
 
     rfidModule.print(FORBIDDEN_CALLBACK);
   }
 
-  else if (serverResponse.status == ServerRespone::Status::badRequest) {
+  else if (serverResponse.status == ServerResponse::Status::badRequest) {
     logTerminal.print("Bad Request");
   }
 }
@@ -130,9 +133,7 @@ void loop() {
   }
   const char* serverResponsePacket = ether.tcpReply(session);
   if (serverResponsePacket != nullptr) {
-    logTerminal.print("Raw server response: ");
-    logTerminal.println(serverResponsePacket);
-    ServerRespone serverResponse = handleServerResponse(serverResponsePacket);
+    ServerResponse serverResponse = handleServerResponse(serverResponsePacket);
     callback(serverResponse);
   }
 }

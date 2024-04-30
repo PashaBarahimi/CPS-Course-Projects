@@ -16,7 +16,7 @@ const unsigned long OPEN_DOOR_DURATION = 30000;
 const unsigned long GREEN_LIGHT_DURATION = 2000;
 const unsigned long RED_LIGHT_DURATION = 2000;
 const unsigned long LCD_PRINTING_DUARTION = 3000;
-const unsigned long SERVER_TIME_OUT = 1000;
+const unsigned long SERVER_TIME_OUT = 10000;
 
 const int GREEN_LED_PORT = 13;
 const int RED_LED_PORT = 12;
