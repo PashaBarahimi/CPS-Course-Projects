@@ -4,6 +4,8 @@
   - [Introduction](#introduction)
   - [Description](#description)
     - [Embedded](#embedded)
+      - [RFID Scanner embedding](#rfid-scanner-embedding)
+      - [Ethernet Handler](#ethernet-handler)
     - [Proteus](#proteus)
     - [Server](#server)
       - [HTTP Server](#http-server)
@@ -69,6 +71,86 @@ The steps are as follows:
 6. The server stores the access history of the users and sends the access history to the monitoring system client when requested.
 
 ### Embedded
+
+This part includes implementations of two Arduinos used in this project. One is responsible for embedding the RFID Scanner into the system and the other is for connecting it to the ethernet.
+
+#### RFID Scanner embedding
+
+Let's start from the `loop` function to grasp a general idea of what this part is doing.
+
+```cpp
+void loop() {
+  static State currentState;
+  static char rfidBuff[11] = { 0 };
+  static bool isSentToServer = false;
+
+  int rfidLen = readRfid(rfidBuff);
+
+  if (rfidLen != RFID_LEN)
+    isSentToServer = false;
+  if (!isSentToServer && rfidLen == RFID_LEN) {
+    sendToServer(rfidBuff);
+    isSentToServer = true;
+    executeServerCommand(currentState);
+  }
+
+  stabalize(currentState);
+}
+```
+
+It first starts by initializing the `State`, which we'll get back to it. It then tries to read the RFID tag character by character. In order not to block the whole process, just waiting for the RFID Scanner, we read the tag character by character and then proceeds to send it to the server. This is done with the `readRfid` function and the `isSentToServer` flag.
+After reading the tag, it sends it to the other Arduino through the `Serial` stream. After this it waits for the server response. Note that server will reply no matter what, so blocking on this part makes sense as if the server is out of reach, the door system should not work either. Still we have a time out mechanism for this part as follows:
+
+```cpp
+int readServerCommand(char buffer[], int maxLen, unsigned long timeOut) {
+  unsigned long start = millis();
+  int counter = 0;
+
+  while (true) {
+    if (millis() - start > timeOut)
+      break;
+    if (counter >= maxLen)
+      break;
+    if (!ethernetModule.available())
+      continue;
+
+    buffer[counter++] = (char)ethernetModule.read();
+    if (isValidServerCommand(buffer))
+      break;
+  }
+
+  return counter;
+}
+```
+
+It tries to read the server answer character by character until a valid server command is seen. It will abort the process if time exceeds the `timeOut` amount.
+
+After receiving the server's reply, we'll call `grantAccess` or `denyAccess` accordingly. The `grantAccess` will turn on the green light and call the `openDoor`. The `denyAccess` will turn the red light on and call the `closeDoor`.
+
+Now let's go back to the `State`. There are some events happening at the same time. For example a timer should count the amount of time the door has been open and close it if after 30 seconds. We can't block everything and count until 30! So we'll create this `State` struct that holds information of the current state. For example it'll remember the last time that the door got opened. It'll be called on every iteration and check if door should be closed. The `stabilize` function has the responsibility of checking the `currentState` every iteration and corrects it if needed.
+
+#### Ethernet Handler
+
+This module has the job of getting the RFID tag from the first Arduino, sending it to the server, and receiving the answer. Let's take a look into the `loop` function and see what happens in every iteration.
+
+```cpp
+void loop() {
+  char rfid[RFID_LENGHT] = { 0 };
+  static byte session;
+
+  ether.packetLoop(ether.packetReceive());
+  if (readRfid(rfid)) {
+    session = sendToServer(rfid);
+  }
+  const char* serverResponsePacket = ether.tcpReply(session);
+  if (serverResponsePacket != nullptr) {
+    ServerRespone serverResponse = handleServerResponse(serverResponsePacket);
+    callback(serverResponse);
+  }
+}
+```
+
+the first part is the call to the `packetLoop` and `packetReceive`. These two together form the main loop of packet handling in `EtherCard.h`. It then reads the RFID if it is available and ignores the reading if not. After reading it we will send it to the server with an HTTP Post request and wait for a reply. In the end we'll `callback` the first Arduino and notify it of the result.
 
 ### Proteus
 
