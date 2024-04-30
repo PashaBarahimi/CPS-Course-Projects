@@ -31,6 +31,8 @@
 
 ## Introduction
 
+This project is an access control management system that uses RFID technology to authenticate users. When a user tries to access a secure area, they need to present an RFID tag to the RFID reader. The reader reads the information stored on the tag and sends it to the server for authentication. The server checks if the user is allowed to access the area and sends a response back to the reader. If the user is authenticated, the reader grants access to the user. If the user is not authenticated, the reader denies access to the user. If the user is authenticated, the door is opened for 30 seconds and then closed. If the user is not authenticated, the door is not opened or closed. In addition to the access control system, the project also includes a monitoring system that shows the status of the access control system in real-time and can retrieve the access history of the users. This system needs to be authenticated using a username and password before accessing the monitoring system. The monitoring system shows the access history of the users, including the username, time, and date of the access.
+
 ## Description
 
 ### Embedded
