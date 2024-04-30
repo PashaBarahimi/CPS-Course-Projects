@@ -4,8 +4,6 @@
   - [Introduction](#introduction)
   - [Description](#description)
     - [Embedded](#embedded)
-      - [RFID Scanner embedding](#rfid-scanner-embedding)
-      - [Ethernet Handler](#ethernet-handler)
     - [Proteus](#proteus)
     - [Server](#server)
       - [HTTP Server](#http-server)
@@ -13,6 +11,8 @@
     - [Client](#client)
   - [Explanation](#explanation)
     - [Embedded](#embedded-1)
+      - [RFID Scanner embedding](#rfid-scanner-embedding)
+      - [Ethernet Handler](#ethernet-handler)
     - [Proteus](#proteus-1)
     - [Server](#server-1)
       - [HTTP Server](#http-server-1)
@@ -43,6 +43,10 @@
         - [Private Slots](#private-slots)
       - [Application](#application)
   - [How to Run](#how-to-run)
+    - [Running Hidden Embedded System in Proteus](#running-hidden-embedded-system-in-proteus)
+    - [Running the Server](#running-the-server)
+    - [Running the Client](#running-the-client)
+    - [Testing Everything Together](#testing-everything-together)
   - [RFID](#rfid)
     - [RFID Tag](#rfid-tag)
     - [RFID Reader](#rfid-reader)
@@ -71,6 +75,95 @@ The steps are as follows:
       1. The server sends an unauthenticated user message to the embedded system which does not open the door or closes the door if it is already opened.
       2. The server sends an unauthenticated user message to the monitoring system client which shows the user's information and an `Access Denied` message.
 6. The server stores the access history of the users and sends the access history to the monitoring system client when requested.
+
+### Embedded
+
+This part includes Arduino scripts for each of the boards. One of them is [ethernet-handler](./Embedded/ethernet-handler/) and the other one is the [embedded-rfid-scanner](./Embedded/embedded-rfid-scanner/). the first one is responsible for fetching the RFID and sending it to the server via an ethernet module. It then waits for the server response and forwards it to the other Arduino. The second Arduino is responsible for getting the result information and using the actuators. For someone with an unrecognized RFID, it turns the red light on and prints the proper message on the screen. For a person who has access, it turns on the green light.
+
+### Proteus
+
+This part is where all the needed modules for the hidden embedded system are connected together. Two Arduinos, an ethernet module, and some actuators like LEDs, LCD, and DC motors are the modules included in this project. The RFID Scanner is simulated using a virtual terminal.
+
+### Server
+
+#### HTTP Server
+
+#### WebSocket Server
+
+The WebSocket server is responsible for handling the communication between the Monitoring System client and the server. The server is implemented using the `QtWebSockets` library and it listens on port `12345` by default. However, this can be changed by providing the `--websocket-port` argument when running the server. It is responsible for handling the following messages:
+
+- `authenticate`: This message is sent by the client when it wants to authenticate a user. The server will then check if the user is allowed to access the system and respond with a message indicating if the user is allowed or not. The message contains the username and password (base64-encoded) of the user that is trying to authenticate. The server will then respond with a json message with status set to either 200 (OK) or 401 (Unauthorized). The messages format are as follows:
+
+  ```json
+  // client -> server
+  {
+      "type": "authenticate",
+      "data": {
+          "username": "admin",
+          "password": "MTIzNA=="
+      }
+  }
+  ```
+
+  ```json
+  // server -> client
+  {
+      "status": 200 | 401,
+      "data": {}
+  }
+  ```
+
+- `history_request`: This message is sent by the client to retrieve the RFID access history. The server will then respond with a message containing the access history. If the user is not authenticated, the server will respond with a status of 401 (Unauthorized). The messages format are as follows:
+
+  ```json
+  // client -> server
+  {
+      "type": "history_request",
+      "data": {}
+  }
+  ```
+
+  ```json
+  // server -> client
+  {
+      "status": 200 | 401,
+      "data": [
+          {
+              "username": "1234567890",
+              "time": "10:10",
+              "date": "10/28/2021"
+          }
+      ]
+  }
+  ```
+
+- `access_request`: This message is sent by the server to the client whenever a user tries to authenticate using the RFID reader. The server will then send a message to the client containing the username of the user that is trying to authenticate. The client will then display a message to the user indicating that the user is trying to authenticate. The status of the message will either be 200 (OK) or 403 (Forbidden). The messages format are as follows:
+
+  ```json
+  // server -> client
+  {
+      "status": 200 | 403,
+      "data": {
+          "username": "1234567890",
+          "time": "10:10",
+          "date": "10/28/2021"
+      }
+  }
+  ```
+
+The access request history is stored in `data/monitoring_system_history.json` and the client authentication information is stored in `data/monitoring_system_users.json`.
+
+### Client
+
+The client monitoring system is a GUI program implemented using the **Qt** framework.  
+The monitoring system creates a websocket connection to the server and receives new users and the entrance history after authenticating.
+
+The right panel of the GUI is used to enter the address of the server and the username and password of the user. After clicking the authenticate button, a request is send to the server. If the credentials are correct, the client will now start receiving data from the server whenever a new user scans their RFID. The user will be displayed on the left panel of the GUI.  
+It is also possible to request the entrance history by clicking the history button. The full history will be displayed on a new window.
+
+The format of the data transmitted between the server and the client is explained in the [server description](#websocket-server) section.
+
+## Explanation
 
 ### Embedded
 
@@ -168,91 +261,6 @@ The ethernet module is connected to one of the Arduinos and it's IP is set to `1
 This is the gateway IP that Arduino will use to send its requests to the server. This also the same IP as the KM-Test loopback adaptor installed on the localhost to test and simulate the whole system on a single machine. The picture below shows a part of the Proteus simulation:
 
 ![Proteus Simulation](./assets/proteus-running.png)
-
-### Server
-
-#### HTTP Server
-
-#### WebSocket Server
-
-The WebSocket server is responsible for handling the communication between the Monitoring System client and the server. The server is implemented using the `QtWebSockets` library and it listens on port `12345` by default. However, this can be changed by providing the `--websocket-port` argument when running the server. It is responsible for handling the following messages:
-
-- `authenticate`: This message is sent by the client when it wants to authenticate a user. The server will then check if the user is allowed to access the system and respond with a message indicating if the user is allowed or not. The message contains the username and password (base64-encoded) of the user that is trying to authenticate. The server will then respond with a json message with status set to either 200 (OK) or 401 (Unauthorized). The messages format are as follows:
-
-  ```json
-  // client -> server
-  {
-      "type": "authenticate",
-      "data": {
-          "username": "admin",
-          "password": "MTIzNA=="
-      }
-  }
-  ```
-
-  ```json
-  // server -> client
-  {
-      "status": 200 | 401,
-      "data": {}
-  }
-  ```
-
-- `history_request`: This message is sent by the client to retrieve the RFID access history. The server will then respond with a message containing the access history. If the user is not authenticated, the server will respond with a status of 401 (Unauthorized). The messages format are as follows:
-
-  ```json
-  // client -> server
-  {
-      "type": "history_request",
-      "data": {}
-  }
-  ```
-
-  ```json
-  // server -> client
-  {
-      "status": 200 | 401,
-      "data": [
-          {
-              "username": "1234567890",
-              "time": "10:10",
-              "date": "10/28/2021"
-          }
-      ]
-  }
-  ```
-
-- `access_request`: This message is sent by the server to the client whenever a user tries to authenticate using the RFID reader. The server will then send a message to the client containing the username of the user that is trying to authenticate. The client will then display a message to the user indicating that the user is trying to authenticate. The status of the message will either be 200 (OK) or 403 (Forbidden). The messages format are as follows:
-
-  ```json
-  // server -> client
-  {
-      "status": 200 | 403,
-      "data": {
-          "username": "1234567890",
-          "time": "10:10",
-          "date": "10/28/2021"
-      }
-  }
-  ```
-
-The access request history is stored in `data/monitoring_system_history.json` and the client authentication information is stored in `data/monitoring_system_users.json`.
-
-### Client
-
-The client monitoring system is a GUI program implemented using the **Qt** framework.  
-The monitoring system creates a websocket connection to the server and receives new users and the entrance history after authenticating.
-
-The right panel of the GUI is used to enter the address of the server and the username and password of the user. After clicking the authenticate button, a request is send to the server. If the credentials are correct, the client will now start receiving data from the server whenever a new user scans their RFID. The user will be displayed on the left panel of the GUI.  
-It is also possible to request the entrance history by clicking the history button. The full history will be displayed on a new window.
-
-The format of the data transmitted between the server and the client is explained in the [server description](#websocket-server) section.
-
-## Explanation
-
-### Embedded
-
-### Proteus
 
 ### Server
 In main.cpp, at the beginning of the file, the command line arguments are parsed to get the port numbers for the WebSocket server and the HTTP server. The default port numbers are 12345 and 54321 respectively. The monitoring system authenticator, the RFID authentication history, and the RFID authenticator are created with the following code:
@@ -1622,6 +1630,58 @@ void Application::showHistoryWindow(const QList<RfidUser>& history) {
 And finally, when the connection status changes, the `changeRightPanelEnabled` method of the main window is called which enables or disables the right panel.
 
 ## How to Run
+
+### Running Hidden Embedded System in Proteus
+
+Just load the Proteus project in [Proteus directory](./Proteus/) and run the simulation. The picture below demonstrates the system running in simulation:
+
+![Proteus Simulation Running](./assets/proteus-simulation-running.png)
+
+Note that two different virtual terminals open. One of them is for logging purposes and the other one acts as an RFID scanner. This is because there is no RFID scanner in Proteus (Which makes sense because whose face is going to be scanned!). Now you can write a 10 digit ID in the RFID virtual terminal and watch it getting sent to the server. But before doing that, let's first run the server.
+
+### Running the Server
+
+First open the QT Creator app and load the server project. Then navigate to the Project tab on the left and make sure that the "Working directory" is set to the [Server](./Server/)'s directory. Also add the `--http-port 80` command line argument. This is because the embedded system sends it's requests to this port. After setting everything up, just simply hit run and you should see the following message in the terminal:
+
+![Server Run](./assets/server-run.png)
+
+### Running the Client
+
+Open QT Creator and load the project located in the [Client](./Client/) directory. Simply hit run and you should see graphical interface. it first needs you to enter the server address, username and password of the admin. Fill the blanks with the following values:
+
+- Server address: ws://localhost:12345
+- Username: admin
+- Password: 1234
+
+After that hit "اتصال به سرور" button, and you're logged in:
+
+![Monitoring System Logged In](./assets/monitoring-system-logged-in.png)
+
+You can also hit the "نایش تاریخچه" to see the full logged events.
+
+### Testing Everything Together
+
+Run everything at once and send a request from the hidden embedded system. To do this, you have to write the desired RFID in the RFID virtual terminal. In our case, we send `1234567890` to the server:
+
+![Send RFID to Proteus](./assets/send-rfid-in-proteus.png)
+
+Wait for the server response and you'll see the green LED turning on and LCD showing "Access Granted!":
+
+![Proteus Access Granted](./assets/proteus-access-grnated.png)
+
+Also note the log virtual terminal printing the received packet and the callback action. The aforementioned RFID was registered as a valid one in the server. Let's try something that is not registered, like `0987654321`, and see the result:
+
+![Proteus Access Denied](./assets/proteus-access-denied.png)
+
+The red LED is turned on and the LCD shows "Access Denied!". Now that we have simulated both events, let's check the monitoring system:
+
+![Monitoring System](./assets/monitoring-system-running-1.png)
+
+We can see the unauthorized message on the screen. Check the log history part to see the authorized accesses:
+
+![Monitoring System](./assets/monitoring-system-running-2.png)
+
+Note that in this picture we have sent the same accessible RFID several times to make sure the logging feature works perfectly.
 
 ## RFID
 
