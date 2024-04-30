@@ -114,9 +114,7 @@ void setup() {
   rfidModule.begin(BAUD_RATE);
   logTerminal.begin(BAUD_RATE);
 
-  if (ether.begin(sizeof Ethernet::buffer, mac, SS) == 0) {
-    logTerminal.println("Failed to initialize ethernet card.");
-  }
+  ether.begin(sizeof Ethernet::buffer, mac, SS);
   ether.staticSetup(ip, gateway);
 
   ether.copyIp(ether.hisip, serverIp);

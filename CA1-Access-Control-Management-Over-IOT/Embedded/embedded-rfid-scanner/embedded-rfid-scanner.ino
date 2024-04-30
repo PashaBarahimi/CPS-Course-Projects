@@ -10,9 +10,9 @@ const char SERVER_FORBIDDEN[] PROGMEM = "forbidden";
 
 
 const int RFID_LEN = 10;
-const unsigned long MOTOR_DELAY = 1000;
+const unsigned long MOTOR_DELAY = 180;
 
-const unsigned long OPEN_DOOR_DURATION = 3000;
+const unsigned long OPEN_DOOR_DURATION = 30000;
 const unsigned long GREEN_LIGHT_DURATION = 2000;
 const unsigned long RED_LIGHT_DURATION = 2000;
 const unsigned long LCD_PRINTING_DUARTION = 3000;
@@ -23,8 +23,8 @@ const int RED_LED_PORT = 12;
 const int MOTOR_PORT_1 = 7;
 const int MOTOR_PORT_2 = 6;
 
-const char LCD_ACCESS_GRANTED_MSG[] PROGMEM = "Access Granted!";
-const char LCD_ACCESS_DENIED_MSG[] PROGMEM = "Access Denied!";
+const char LCD_ACCESS_GRANTED_MSG[] = "Access Granted!";
+const char LCD_ACCESS_DENIED_MSG[] = "Access Denied!";
 
 struct State {
   bool isDoorOpen = false;
@@ -102,7 +102,7 @@ void sendToServer(const char rfid[]) {
   ethernetModule.write(rfid);
 }
 
-void grantAccess(State& state) {
+void grantAccess(State& state, const char* rfid) {
   digitalWrite(GREEN_LED_PORT, HIGH);
   state.isGreenLightOn = true;
   state.lastTimeGreenLightTurnedOn = millis();
@@ -112,12 +112,18 @@ void grantAccess(State& state) {
   state.lastTimeDoorOpened = millis();
 
   lcd.clear();
+  lcd.print(rfid);
+  delay(200);
+  for(int i = 0; i < 10; ++i) {
+    lcd.scrollDisplayLeft();
+    delay(20);
+  }
   lcd.print(LCD_ACCESS_GRANTED_MSG);
   state.isLcdClear = false;
   state.lastTimeLcdPrinted = millis();
 }
 
-void denyAccess(State& state) {
+void denyAccess(State& state, const char* rfid) {
   digitalWrite(RED_LED_PORT, HIGH);
   state.isRedLightOn = true;
   state.lastTimeRedLightTurnedOn = millis();
@@ -126,12 +132,18 @@ void denyAccess(State& state) {
   state.isDoorOpen = false;
 
   lcd.clear();
+  lcd.print(rfid);
+  delay(200);
+  for(int i = 0; i < 10; ++i) {
+    lcd.scrollDisplayLeft();
+    delay(20);
+  }
   lcd.print(LCD_ACCESS_DENIED_MSG);
   state.isLcdClear = false;
   state.lastTimeLcdPrinted = millis();
 }
 
-void executeServerCommand(State& state) {
+void executeServerCommand(State& state, const char* rfid) {
   char command[128] = { 0 };
   int len = readServerCommand(command, 127, SERVER_TIME_OUT);
   if (len) {
@@ -140,9 +152,9 @@ void executeServerCommand(State& state) {
   }
 
   if (!strcmp_P(command, SERVER_OK)) {
-    grantAccess(state);
+    grantAccess(state, rfid);
   } else if (!strcmp_P(command, SERVER_FORBIDDEN)) {
-    denyAccess(state);
+    denyAccess(state, rfid);
   }
 }
 
@@ -200,7 +212,7 @@ void loop() {
   if (!isSentToServer && rfidLen == RFID_LEN) {
     sendToServer(rfidBuff);
     isSentToServer = true;
-    executeServerCommand(currentState);
+    executeServerCommand(currentState, rfidBuff);
   }
 
   stabalize(currentState);
