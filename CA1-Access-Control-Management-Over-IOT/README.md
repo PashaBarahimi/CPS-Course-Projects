@@ -47,7 +47,26 @@
 
 ## Introduction
 
+This project is an access control management system that uses RFID technology to authenticate users. When a user tries to access a secure area, they need to present an RFID tag to the RFID reader. The reader reads the information stored on the tag and sends it to the server for authentication. The server checks if the user is allowed to access the area and sends a response back to the reader. If the user is authenticated, the reader grants access to the user. If the user is not authenticated, the reader denies access to the user. If the user is authenticated, the door is opened for 30 seconds and then closed. If the user is not authenticated, the door is not opened or it will be closed if it is already opened. In addition to the access control system, the project also includes a monitoring system that shows the status of the access control system in real-time and can retrieve the access history of the users. This system needs to be authenticated using a username and password before accessing the monitoring system. The monitoring system shows the access history of the users, including the username, time, and date of the access.
+
 ## Description
+
+The project consists of four main components: the embedded system, the Proteus simulation, the server, and the monitoring system client. The embedded system is responsible for reading the RFID tag and sending the information to the server for authentication. The Proteus simulation simulates the RFID reader and the door that is controlled by the embedded system. The server is responsible for authenticating the users and controlling the access to the secure area. The monitoring system client is responsible for showing the status of the access control system and retrieving the access history of the users.
+
+The steps are as follows:
+
+1. The monitoring system client sends an authentication request to the server with the username and password of the user.
+2. The server checks if the user is allowed to access the monitoring system and sends a response back to the client.
+3. A user tries to access the secure area by presenting an RFID tag to the RFID reader.
+4. The reader reads the information stored on the tag and sends it to the server for authentication.
+5. The server checks if the user is allowed to access the area and sends a response back to the reader.
+   1. If the user is authenticated, the reader grants access to the user.
+      1. The server sends an authenticated user message to the embedded system which opens the door for 30 seconds.
+      2. The server sends an authenticated user message to the monitoring system client which shows the user's information and an `Access Granted` message.
+   2. If the user is not authenticated, the reader denies access to the user.
+      1. The server sends an unauthenticated user message to the embedded system which does not open the door or closes the door if it is already opened.
+      2. The server sends an unauthenticated user message to the monitoring system client which shows the user's information and an `Access Denied` message.
+6. The server stores the access history of the users and sends the access history to the monitoring system client when requested.
 
 ### Embedded
 
