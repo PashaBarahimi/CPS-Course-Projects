@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     parser.addHelpOption();
     QCommandLineOption webSocketPortOption("websocket-port", "Port for WebSocket server to listen on", "websocket-port", "12345");
     parser.addOption(webSocketPortOption);
-    QCommandLineOption httpPortOption("http_port", "Port for Http server to listen on", "http_port", "54321");
+    QCommandLineOption httpPortOption("http-port", "Port for Http server to listen on", "http-port", "54321");
     parser.addOption(httpPortOption);
     parser.process(a);
 
