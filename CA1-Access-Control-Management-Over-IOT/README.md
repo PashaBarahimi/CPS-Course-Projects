@@ -23,6 +23,21 @@
         - [WebSocket Response](#websocket-response)
         - [WebSocket Server](#websocket-server-2)
     - [Client](#client-1)
+      - [Folder Structure](#folder-structure)
+      - [GUI Changes](#gui-changes)
+      - [Widgets](#widgets)
+      - [Windows](#windows)
+      - [Users](#users)
+        - [User](#user)
+        - [RFID User](#rfid-user)
+      - [WebSocket Request](#websocket-request-1)
+      - [WebSocket Response](#websocket-response-1)
+      - [WebSocket Client](#websocket-client)
+        - [Constructor](#constructor)
+        - [Signals](#signals)
+        - [Public Slots](#public-slots)
+        - [Private Slots](#private-slots)
+      - [Application](#application)
   - [How to Run](#how-to-run)
   - [RFID](#rfid)
     - [RFID Tag](#rfid-tag)
@@ -108,6 +123,14 @@ The WebSocket server is responsible for handling the communication between the M
 The access request history is stored in `data/monitoring_system_history.json` and the client authentication information is stored in `data/monitoring_system_users.json`.
 
 ### Client
+
+The client monitoring system is a GUI program implemented using the **Qt** framework.  
+The monitoring system creates a websocket connection to the server and receives new users and the entrance history after authenticating.
+
+The right panel of the GUI is used to enter the address of the server and the username and password of the user. After clicking the authenticate button, a request is send to the server. If the credentials are correct, the client will now start receiving data from the server whenever a new user scans their RFID. The user will be displayed on the left panel of the GUI.  
+It is also possible to request the entrance history by clicking the history button. The full history will be displayed on a new window.
+
+The format of the data transmitted between the server and the client is explained in the [server description](#websocket-server) section.
 
 ## Explanation
 
@@ -797,6 +820,453 @@ void WebSocketServer::sendTextMessage(const WebSocketResponse& response) {
 Whenever a new connection is made, the `onNewConnection` slot is called which sets the `authenticated` flag to false and connects the `textMessageReceived` signal to the `processTextMessage` slot and the `disconnected` signal to the `socketDisconnected` slot. The `processTextMessage` slot processes the text message received from the client. If the message is an `authenticate` message, it emits the `clientAuthenticationRequested` signal with the username and password of the user. If the message is a `history_request` message, it checks if the user is authenticated and emits the `historyRequested` signal. If the message is neither an `authenticate` message nor a `history_request` message, it sends a `BadRequest` response. The `authenticated` slot sets the `authenticated` flag to true and sends an `Ok` response. The `unauthenticated` slot sets the `authenticated` flag to false and sends an `Unauthorized` response. The `sendAuthenticatedUser` slot sends an `Ok` response with the authenticated user. The `sendUnauthenticatedUser` slot sends a `Forbidden` response with the unauthenticated user. The `sendHistory` slot sends an `Ok` response with the history. The `sendTextMessage` slot sends the response to the client.
 
 ### Client
+
+#### Folder Structure
+
+The client project structure is as follows:
+
+```text
+assets/
+  icon.rc
+  UT.ico
+users/
+  cpsrfiduser.h|cpp
+  cpsuser.h|cpp
+websocket/
+  cpswebsocketclient.h|cpp
+  cpswebsocketrequest.h|cpp
+  cpswebsocketresponse.h|cpp
+widgets/
+  cpsbutton.h|cpp
+  cpslabel.h|cpp
+  cpstextfield.h|cpp
+windows/
+  cpshistorywindow.hp|cpp
+  cpsmainwindow.h|cpp
+  cpswindowsapitools.h
+cpsapplication.h|cpp
+main.cpp
+CMakeLists.txt
+```
+
+#### GUI Changes
+
+Small changes were made to the given GUI code.  
+This includes re-formatting, making folders and fixing includes.
+
+A method was added to the `CPS::Button` class which allows the button to change color after being disabled.  
+The `MainWindow::changeRightPanelEnabled` method was also changed because disabling a layout does not disable the child widgets.
+
+#### Widgets
+
+- Button:
+  The `CPS::Button` class inherits the `QPushButton` class and adds styling to it.  
+  The constructor takes the button's text and sets the font size, button height and applies a stylesheet to set the color and background color.  
+  The added `color` method takes a boolean `enabled` to set the color of the button according to whether the button is disabled or not.
+- Label:
+  The `CPS::Label` class inherits the `QLabel` class and adds styling to it.  
+  The constructor takes the label's text and sets the font size and applies a stylesheet to set the color.
+- Text Field:
+  The `CPS::TextField` class inherits the `QLineEdit` class and adds styling to it.  
+  The constructor sets the font size, margin, placeholder text, and applies a stylesheet to set the background color and add a bottom border.
+
+#### Windows
+
+There are 2 windows in the program:
+
+- `CPS::MainWindow`:
+  This class inherits `QMainWindow` and is the main window opened by the `CPS::Application`.  
+  The window consists of a title, the left and the right panel.  
+  The right panel is first used to connect to a server. This means that there are 3 text fields to enter the server address, username and password, and a button to begin the connection and authentication process.  
+  After successfully connecting, the right panel is disabled. If the connection is not successful or the authentication fails, the right panel is enabled again.  
+  The left panel contains 3 labels to display the username, time, and date of the RFID user that is trying to authenticate at the entrance.  
+  There is also a button to open the entrance history window.
+- `CPS::HistoryWindow`:
+  This class inherits `QWidget` and is a separate window that displays the entrance history.  
+  The window contains a `QListWidget` list which displays the history received from the server.
+
+There is also a `cpswindowsapitools.h` file which has a function to set the window theme to dark mode.
+
+#### Users
+
+There are 2 user classes in the program:
+
+##### User
+
+The `CPS::User` class holds the username and password of a monitoring system user:
+
+```cpp
+class User {
+public:
+    User(const QString& username, const QString& password);
+    QString username() const;
+    QString password() const;
+    QJsonObject toJsonObject(bool base64Password = true) const;
+
+private:
+    QString username_;
+    QString password_;
+};
+```
+
+The class contains a constructor and getters of the username and password field. There is also a `toJsonObject` method which converts the User to a `QJsonObject`. The `base64Password` parameter is used to determine if the password should be base64 encoded.
+
+##### RFID User
+
+The `CPS::RfidUser` class holds the RFID and the last entrance time of a RFID user. The time is stored as a `QDateTime` object:
+
+```cpp
+class RfidUser {
+public:
+    RfidUser(const QString& rfid, QDateTime datetime);
+    RfidUser(const QString& rfid, const QString& date, const QString& time);
+    QString rfid() const;
+    QJsonObject toJsonObject() const;
+
+private:
+    QString rfid_;
+    QDateTime datetime_;
+};
+```
+
+There are 2 constructors. One takes the RFID and the datetime object, and the other one takes the date and time as string.  
+The datetime string format is `MM/dd/yyyy hh:mm`. The second constructor turns the strings into a `QDateTime` object.  
+The `toJsonObject` method converts the user to 3 fields of a json object.
+
+#### WebSocket Request
+
+The `CPS::WebSocketRequest` class is responsible for creating a request content to send to the server over websocket.
+
+```cpp
+class WebSocketRequest {
+public:
+    enum class Type {
+        Authenticate,
+        HistoryRequest
+    };
+
+    WebSocketRequest(Type type, const QJsonObject& data = QJsonObject());
+    QJsonDocument toJsonDocument() const;
+
+private:
+    static QString typeToString(Type type);
+
+private:
+    Type type_;
+    QJsonObject data_;
+};
+```
+
+There is a `Type` enum which indicates the type of request from the client. There are 2 request types: `Authenticate` and `HistoryRequest` used to authenticate the user and request the history respectively.  
+The static method `typeToString` converts the `Type` enum to a string.
+
+The constructor takes the request type and its data in a `QJsonObject` format.  
+For the **Authenticate** request, the data should contain the username and password.  
+For the **HistoryRequest** request, the data should be empty.
+
+#### WebSocket Response
+
+The `CPS::WebSocketResponse` class is responsible for handling the WebSocket responses sent from the server.
+
+```cpp
+class WebSocketResponse {
+public:
+    enum class Type {
+        Unknown,
+        Authenticate,
+        HistoryResponse,
+        Rfid,
+    };
+
+    enum class Status {
+        Unknown = 0,
+        Ok = 200,
+        BadRequest = 400,
+        Unauthorized = 401,
+        Forbidden = 403,
+    };
+
+    WebSocketResponse(const QJsonObject& json);
+    Type type() const;
+    Status status() const;
+    QJsonDocument data() const;
+
+private:
+    static Status statusFromInt(int status);
+
+private:
+    Status status_;
+    Type type_;
+    QJsonDocument data_;
+};
+```
+
+There are 3 types of responses sent by the server:
+
+- **Authenticate**: After a authenticate request, the server only sends a status code which is either `Ok` or `Unauthorized`.
+- **HistoryResponse**: After requesting the entrance history, the server sends a status code and an array in the data field which contains RFID user objects.
+- **Rfid**: The server sends an `Rfid` response when a new RFID user is detected. This response has an object in the data field and the status code is either `Ok` or `Forbidden`.
+
+The constructor takes a json sent by the server and extracts the status, type, and data fields. There are getter methods for the 3 fields.
+
+#### WebSocket Client
+
+The `CPS::WebSocketClient` class is responsible for creating a websocket connection to the server and receiving new users and the entrance history after authenticating.
+
+```cpp
+class WebSocketClient : public QObject {
+    Q_OBJECT
+public:
+    explicit WebSocketClient(QObject* parent = nullptr);
+    ~WebSocketClient();
+
+Q_SIGNALS:
+    void newUser(const QString& username, const QString& date, const QString& time, bool denied);
+    void historyReady(const QList<RfidUser>& history);
+    void connectionChanged(bool enabled);
+
+public Q_SLOTS:
+    void connectToServer(const QString& address, const QString& username, const QString& password);
+    void sendHistoryRequest();
+
+private Q_SLOTS:
+    void wsConnected();
+    void wsDisconnected();
+    void wsError(QAbstractSocket::SocketError err);
+    void processTextMessage(const QString& message);
+
+private:
+    void closeConnection();
+    void sendAuthenticationRequest();
+    void sendRequest(const WebSocketRequest& req);
+    QList<RfidUser> extractHistory(const QJsonArray& history);
+
+private:
+    QWebSocket* webSocket_;
+    User* user_;
+};
+```
+
+##### Constructor
+
+The constructor creates a new `QWebSocket` object and creates connections for their events:
+
+```cpp
+QObject::connect(webSocket_, &QWebSocket::connected, this, &WebSocketClient::wsConnected);
+QObject::connect(webSocket_, &QWebSocket::disconnected, this, &WebSocketClient::wsDisconnected);
+QObject::connect(webSocket_, &QWebSocket::errorOccurred, this, &WebSocketClient::wsError);
+QObject::connect(webSocket_, &QWebSocket::textMessageReceived, this, &WebSocketClient::processTextMessage);
+```
+
+The `QWebSocket` signals are connected to the corresponding slots of the `WebSocketClient` class.  
+The 4 signals are `connected`, `disconnected`, `errorOccurred`, and `textMessageReceived`.
+
+- The first one is emitted when the websocket connection is established.
+- The second one is emitted when the websocket connection is closed.
+- The third one is emitted when an error occurs.
+- The last one is emitted when the server sends a message/response.
+
+##### Signals
+
+There are 3 signals in the class:
+
+```cpp
+void newUser(const QString& username, const QString& date, const QString& time, bool denied);
+void historyReady(const QList<RfidUser>& history);
+void connectionChanged(bool enabled);
+```
+
+- The `newUser` signal is emitted when a new user is received by the client. The 4 parameters are the username, date, time, and whether the user was access denied or not.
+- The `historyReady` signal is emitted when the history is received by the client. The parameter is a list of `RfidUser` objects.
+- The `connectionChanged` signal is emitted when the connection status changes. The parameter is a boolean which indicates whether the connection is enabled or not. This is used to enable or disable the right panel in the main window.
+
+##### Public Slots
+
+```cpp
+public Q_SLOTS:
+    void connectToServer(const QString& address, const QString& username, const QString& password);
+    void sendHistoryRequest();
+```
+
+- The `connectToServer` slot is called to connect to the server. It takes the server address, username, and password as parameters. It creates a new `User` object and sets the `user_` field to it. It then connects to the server using the `QWebSocket`.
+- The `sendHistoryRequest` slot is called to request the entrance history from the server. It sends a `HistoryRequest` request to the server.
+
+```cpp
+void WebSocketClient::connectToServer(const QString& address, const QString& username, const QString& password) {
+    qInfo() << "Connecting to:" << address << "...";
+    Q_EMIT connectionChanged(false);
+    user_ = new User(username, password);
+    webSocket_->open(QUrl(address));
+}
+
+void WebSocketClient::sendHistoryRequest() {
+    qInfo() << "Sending history request";
+    WebSocketRequest req(WebSocketRequest::Type::HistoryRequest);
+    sendRequest(req);
+}
+
+void WebSocketClient::sendRequest(const WebSocketRequest& req) {
+    webSocket_->sendTextMessage(req.toJsonDocument().toJson(QJsonDocument::Compact));
+}
+```
+
+##### Private Slots
+
+```cpp
+private Q_SLOTS:
+    void wsConnected();
+    void wsDisconnected();
+    void wsError(QAbstractSocket::SocketError err);
+    void processTextMessage(const QString& message);
+```
+
+- The `wsConnected` slot is called when the websocket connection is established. It also sends an authentication request to the server:
+
+```cpp
+void WebSocketClient::sendAuthenticationRequest() {
+    qInfo() << "Sending authentication request";
+    WebSocketRequest req(WebSocketRequest::Type::Authenticate, user_->toJsonObject());
+    sendRequest(req);
+}
+```
+
+- The `wsDisconnected` slot is called when the websocket connection is closed and prints the info.
+- The `wsError` slot is called when an error occurs. The error message is printed and the connection is closed:
+
+```cpp
+void WebSocketClient::wsConnected() {
+    qInfo() << "Connected to server";
+    sendAuthenticationRequest();
+}
+
+void WebSocketClient::wsDisconnected() {
+    qInfo() << "Websocket disconnected";
+}
+
+void WebSocketClient::wsError(QAbstractSocket::SocketError err) {
+    qWarning() << "Websocket error:" << err;
+    closeConnection();
+}
+
+void WebSocketClient::closeConnection() {
+    webSocket_->close();
+    delete user_;
+    user_ = nullptr;
+    Q_EMIT connectionChanged(true);
+}
+```
+
+To close the connection after an error or failed authentication, the `closeConnection` method is called. It closes the websocket connection, deletes the user object, and emits the `connectionChanged` signal.
+
+- The `processTextMessage` slot is called when the server sends a message. It processes the message and emits the corresponding signals:
+
+```cpp
+void WebSocketClient::processTextMessage(const QString& message) {
+    qDebug() << "Received message from server:" << message;
+    QJsonObject json = QJsonDocument::fromJson(message.toUtf8()).object();
+    WebSocketResponse response(json);
+
+    if (response.status() == WebSocketResponse::Status::Unknown ||
+        response.type() == WebSocketResponse::Type::Unknown) {
+        qInfo() << "Invalid response";
+        return;
+    }
+
+    switch (response.type()) {
+    case WebSocketResponse::Type::Unknown:
+        break;
+    case WebSocketResponse::Type::Authenticate:
+        if (response.status() != WebSocketResponse::Status::Ok) {
+            qInfo() << "Invalid authentication";
+            closeConnection();
+        }
+        break;
+    case WebSocketResponse::Type::HistoryResponse:
+        if (response.status() == WebSocketResponse::Status::Ok) {
+            QJsonArray data = response.data().array();
+            QList<RfidUser> list = extractHistory(data);
+            Q_EMIT historyReady(list);
+        }
+        break;
+    case WebSocketResponse::Type::Rfid:
+        QJsonObject user = response.data().object();
+        if (response.status() == WebSocketResponse::Status::Ok) {
+            Q_EMIT newUser(user["username"].toString(), user["date"].toString(), user["time"].toString(), false);
+        }
+        else if (response.status() == WebSocketResponse::Status::Forbidden) {
+            Q_EMIT newUser(user["username"].toString(), user["date"].toString(), user["time"].toString(), true);
+        }
+        break;
+    }
+}
+```
+
+The `processTextMessage` slot converts the message to a `QJsonObject` and creates a `WebSocketResponse` object from it.  
+It checks the validity of the response and then processes it according to the response type and status:
+
+- If the response is an `Authenticate` response and the status is not `Ok`, the connection is closed.
+- If the response is a `HistoryResponse` response and the status is `Ok`, the history is extracted and the `historyReady` signal is emitted.
+- If the response is an `Rfid` response, the user object is extracted and the `newUser` signal is emitted with the username, date, time, and whether the user was denied access.
+
+#### Application
+
+The `CPS::Application` class is the main class of the client application. It creates the main window and the websocket client and the connections between them.
+
+```cpp
+class Application : public QObject {
+    Q_OBJECT
+public:
+    explicit Application(QObject* parent = nullptr);
+    ~Application();
+
+    void show();
+
+private Q_SLOTS:
+    void showHistoryWindow(const QList<RfidUser>& history);
+
+private:
+    MainWindow* window_;
+    HistoryWindow* history_;
+    WebSocketClient* webSocketClient_;
+};
+```
+
+The application show function shows the main window. The `showHistoryWindow` slot is called when the history is ready and it shows the history window.  
+
+The signal/slot connections between the main window, history window, and websocket client are created in the constructor:
+
+```cpp
+Application::Application(QObject* parent)
+    : QObject(parent),
+      window_(new MainWindow),
+      history_(new HistoryWindow),
+      webSocketClient_(new WebSocketClient) {
+    setWindowsThemeToDark<MainWindow>(*window_);
+    setWindowsThemeToDark<HistoryWindow>(*history_);
+
+    QObject::connect(window_, &MainWindow::connectBtnClicked, webSocketClient_, &WebSocketClient::connectToServer);
+    QObject::connect(window_, &MainWindow::historyBtnClicked, webSocketClient_, &WebSocketClient::sendHistoryRequest);
+
+    QObject::connect(webSocketClient_, &WebSocketClient::newUser, window_, &MainWindow::showUserDetails);
+    QObject::connect(webSocketClient_, &WebSocketClient::historyReady, this, &Application::showHistoryWindow);
+    QObject::connect(webSocketClient_, &WebSocketClient::connectionChanged, window_, &MainWindow::changeRightPanelEnabled);
+}
+```
+
+Clicking the connect button calls `WebSocketClient::connectToServer` and clicking the history button calls `WebSocketClient::sendHistoryRequest`.  
+When a new RFID user is detected, main window's `showUserDetails` method is called. When the history is ready, the `showHistoryWindow` slot is called which shows the history window:
+
+```cpp
+void Application::showHistoryWindow(const QList<RfidUser>& history) {
+    QJsonArray data;
+    for (const RfidUser& item : history) {
+        data << item.toJsonObject();
+    }
+    history_->show(data);
+}
+```
+
+And finally, when the connection status changes, the `changeRightPanelEnabled` method of the main window is called which enables or disables the right panel.
 
 ## How to Run
 
