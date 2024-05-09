@@ -8,11 +8,11 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup()
 
-qt_add_executable(appMotion-Based-Authenticator
+qt_add_executable(MotionBasedAuthenticator
     main.cpp
 )
 
-qt_add_qml_module(appMotion-Based-Authenticator
+qt_add_qml_module(MotionBasedAuthenticator
     URI Motion-Based-Authenticator
     VERSION 1.0
     QML_FILES
@@ -22,20 +22,20 @@ qt_add_qml_module(appMotion-Based-Authenticator
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(appMotion-Based-Authenticator PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appMotion-Based-Authenticator
+set_target_properties(MotionBasedAuthenticator PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.MotionBasedAuthenticator
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(appMotion-Based-Authenticator
+target_link_libraries(MotionBasedAuthenticator
     PRIVATE Qt6::Quick
 )
 
 include(GNUInstallDirs)
-install(TARGETS appMotion-Based-Authenticator
+install(TARGETS MotionBasedAuthenticator
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
