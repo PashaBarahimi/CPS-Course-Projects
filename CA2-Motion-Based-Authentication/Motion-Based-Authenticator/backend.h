@@ -5,6 +5,8 @@
 #include <QQmlEngine>
 
 #include "movement.h"
+#include "accelerometerhandler.h"
+#include "patternrecognizer.h"
 
 class Backend : public QObject
 {
@@ -42,6 +44,8 @@ Q_SIGNALS:
     void authenticationFailed(const QString& error);
 
 private:
+    AccelerometerHandler* accelerometerHandler_ = new AccelerometerHandler();
+    PatternRecognizer* patternRecognizer_;
 };
 
 #endif // BACKEND_H

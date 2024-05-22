@@ -5,6 +5,7 @@ project(MotionBasedAuthenticator VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Qml)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Sensors)
 
 qt_standard_project_setup()
 
@@ -30,15 +31,18 @@ qt_add_qml_module(MotionBasedAuthenticator
         SensorValues.qml
     RESOURCES
         qtquickcontrols2.conf
+        SOURCES accelerometerhandler.h accelerometerhandler.cpp
+        SOURCES movementpattern.h movementpattern.cpp
+        SOURCES patternrecognizer.h patternrecognizer.cpp
 )
 
 set_target_properties(MotionBasedAuthenticator PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-target_link_libraries(MotionBasedAuthenticator
-    PRIVATE Qt6::Quick Qt6::Qml
-)
+target_link_libraries(MotionBasedAuthenticator PRIVATE Qt6::Quick Qt6::Qml)
+target_link_libraries(MotionBasedAuthenticator PRIVATE Qt6::Sensors)
+
 
 include(GNUInstallDirs)
 install(TARGETS MotionBasedAuthenticator

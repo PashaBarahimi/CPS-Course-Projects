@@ -1,23 +1,23 @@
 #include "backend.h"
 
 Backend::Backend(QObject *parent)
-    : QObject{parent} {}
+    : QObject{parent}
+{
+    patternRecognizer_ = new PatternRecognizer(accelerometerHandler_);
+
+    connect(accelerometerHandler_, &AccelerometerHandler::calibrationFinished, this, &Backend::calibrationFinished);
+}
 
 void Backend::startCalibration()
 {
-    // This function is called when we click the Calibrate button in UI
-    // We should monitor the sensors' outputs for a while (1-3 seconds maybe?)
-    // and store the average of these values as the zero-point to make the sensors calibrated
-    // for example the average of z in accelerometer is 9.8 and after calibration,
-    // we store this 9.8 as the zero-point and decrease it from the actual reading (9.8)
-    // to reach a value of (almost) 0
+    qDebug() << "Calibration started";
+    accelerometerHandler_->startCalibrate();
 }
 
 void Backend::startPatternRecording()
 {
-    // This function is called when the Start Recording button is clicked in Pattern's page
-    // we should record the movements until stopPatternRecording is called
-    // Also, for every movement we recognize, we should pass it to the UI using the signals
+    qDebug() << "Pattern recording started";
+    patternRecognizer_->startRecording();
 }
 
 void Backend::stopPatternRecording()
