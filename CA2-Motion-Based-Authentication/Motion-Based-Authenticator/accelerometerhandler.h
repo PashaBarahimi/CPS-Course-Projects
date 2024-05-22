@@ -7,33 +7,34 @@
 #include <QObject>
 #include <QDebug>
 
+#include "acceleration.h"
+
 class AccelerometerHandler : public QObject {
     Q_OBJECT
 public:
     AccelerometerHandler();
     void startCalibrate();
     void stopCalibrate();
-    void startReading(int durationMs);
+    void start();
+    void stop();
+    void clear();
+    QVector<Acceleration> getReadings() const { return readings; }
+    QAccelerometer *sensor_;
 
 Q_SIGNALS:
     void calibrationFinished(bool success);
+    void readingChanged();
+    void updateAccelData(qreal x, qreal y, qreal z, qreal xCal, qreal yCal, qreal zCal);
 
 private slots:
     void handleReading();
 
 private:
-    void start();
-    void stop();
-    void clear();
+
 
 private:
-    QAccelerometer *sensor_;
-    QVector<qreal> readingsX;
-    QVector<qreal> readingsY;
-    QVector<qreal> readingsZ;
-    qreal xBias;
-    qreal yBias;
-    qreal zBias;
+    QVector<Acceleration> readings;
+    Acceleration readingsBias;
 };
 
 #endif // ACCELEROMETERHANDLER_H

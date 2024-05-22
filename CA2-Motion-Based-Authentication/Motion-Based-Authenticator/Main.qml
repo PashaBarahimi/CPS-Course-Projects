@@ -148,6 +148,7 @@ ApplicationWindow {
                     text: "Sensors"
                     onClicked: {
                         stackView.push(sensorsPage)
+                        backend.startShowingSensors()
                     }
                 }
             }
@@ -195,11 +196,13 @@ ApplicationWindow {
 
             onBackClicked: {
                 stackView.pop()
+                backend.stopShowingSensors()
             }
 
             onCalibrationRequested: {
                 backend.startCalibration()
             }
+
         }
     }
 }

@@ -34,6 +34,7 @@ qt_add_qml_module(MotionBasedAuthenticator
         SOURCES accelerometerhandler.h accelerometerhandler.cpp
         SOURCES movementpattern.h movementpattern.cpp
         SOURCES patternrecognizer.h patternrecognizer.cpp
+        SOURCES acceleration.h
 )
 
 set_target_properties(MotionBasedAuthenticator PROPERTIES

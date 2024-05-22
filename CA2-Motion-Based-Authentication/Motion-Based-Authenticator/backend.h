@@ -24,6 +24,9 @@ public:
     Q_INVOKABLE void startAuthentication();
     Q_INVOKABLE void stopAuthentication();
 
+    Q_INVOKABLE void startShowingSensors();
+    Q_INVOKABLE void stopShowingSensors();
+
 Q_SIGNALS:
     void calibrationFinished(bool success);
     void updateGyroData(qreal x, qreal y, qreal z, qreal xCal, qreal yCal, qreal zCal);

@@ -1,48 +1,60 @@
 #include "backend.h"
 
 Backend::Backend(QObject *parent)
-    : QObject{parent}
-{
+    : QObject{parent} {
     patternRecognizer_ = new PatternRecognizer(accelerometerHandler_);
-
+    connect(patternRecognizer_, &PatternRecognizer::patternRecordingAddMovement, this, &Backend::patternRecordingAddMovement);
+    connect(patternRecognizer_, &PatternRecognizer::patternRecordingUpdateMovement, this, &Backend::patternRecordingUpdateMovement);
+    connect(patternRecognizer_, &PatternRecognizer::patternRecordingClearMovements, this, &Backend::patternRecordingClearMovements);
+    connect(patternRecognizer_, &PatternRecognizer::patternRecordingSuccessful, this, &Backend::patternRecordingSuccessful);
+    connect(patternRecognizer_, &PatternRecognizer::patternRecordingFailed, this, &Backend::patternRecordingFailed);
     connect(accelerometerHandler_, &AccelerometerHandler::calibrationFinished, this, &Backend::calibrationFinished);
+    connect(accelerometerHandler_, &AccelerometerHandler::updateAccelData, this, &Backend::updateAccelData);
 }
 
-void Backend::startCalibration()
-{
+void Backend::startCalibration() {
     qDebug() << "Calibration started";
     accelerometerHandler_->startCalibrate();
 }
 
-void Backend::startPatternRecording()
-{
+void Backend::startPatternRecording() {
     qDebug() << "Pattern recording started";
     patternRecognizer_->startRecording();
 }
 
-void Backend::stopPatternRecording()
-{
-    // This functions stops the recording mentioned in the above method
-    // We must also save the complete pattern (a list of movements)
+void Backend::stopPatternRecording() {
+    qDebug() << "Pattern recording finished";
+    patternRecognizer_->stopRecording();
 }
 
-void Backend::startAuthentication()
-{
-    // same as startPatternRecording but called from authentication page
+void Backend::startAuthentication() {
+    // Implement similar to startPatternRecording but store the pattern for comparison
+    qDebug() << "Authentication recording started";
+    patternRecognizer_->startRecording();
 }
 
-void Backend::stopAuthentication()
-{
-    // same as stopPatternRecording but we should also check the equality
-    // of the authentication pattern with the recorded pattern
+void Backend::stopAuthentication() {
+    qDebug() << "Authentication recording finished";
+    patternRecognizer_->stopRecording();
+    MovementPattern authenticationPattern = patternRecognizer_->getRecordedPattern();
+    if (patternRecognizer_->authenticateMovement(authenticationPattern)) {
+        emit authenticationSuccessful();
+    } else {
+        emit authenticationFailed("Pattern mismatch");
+    }
 }
+
+void Backend::startShowingSensors() {
+    accelerometerHandler_->start();
+}
+
+void Backend::stopShowingSensors() {
+    accelerometerHandler_->stop();
+}
+
 
 // Signals
 //
-// calibrationFinished(bool) is used to inform the UI that the calibration process is finished.
-// Otherwise, the busy indicator will stay spinning
-// it gets a boolean which shows if the process was successful. No idea if we ever may pass false to it
-// for example we can check if the standard deviation of the values is not too much
 //
 // updateGyroData(qreal, qreal, qreal, qreal, qreal, qreal) is to update the sensor values in the Sensor's page
 // we can emit this signal with the real rate of sensor reading or decrase the rate as it is only used
