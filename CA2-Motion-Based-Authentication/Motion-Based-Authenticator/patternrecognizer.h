@@ -4,8 +4,11 @@
 #include <QObject>
 #include <QAccelerometer>
 #include <QTimer>
+#include <QPair>
+
 #include "movementpattern.h"
 #include "accelerometerhandler.h"
+#include "acceleration.h"
 
 class PatternRecognizer : public QObject
 {
@@ -14,6 +17,7 @@ public:
     PatternRecognizer(AccelerometerHandler *accelerometerHandler, QObject *parent = nullptr);
     void startRecording();
     void stopRecording();
+    QPair<qreal, qreal> calculateVelocity() const;
     MovementPattern getRecordedPattern() const;
     bool authenticateMovement(const MovementPattern &pattern) const;
 
@@ -25,23 +29,21 @@ signals:
     void patternRecordingFailed(const QString &error);
 
 private slots:
-    void handleReading();
+    void handleReading(qreal x, qreal y, qreal z);
+
+private:
+    void calculateDistance();
+    void processReadings();
+    void addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle);
 
 private:
     AccelerometerHandler *accelerometerHandler_;
     MovementPattern recordedPattern;
     bool isRecording;
     bool isRecordingMovement;
-    QVector<QAccelerometerReading*> readings;
-    QTimer *recordingTimer;
+    QVector<Acceleration> readings_;
     Movement *currentMovement;
-
-    qreal x_ = 0;
-    qreal y_ = 0;
-
-    void calculateDistance();
-    void processReadings();
-    void addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle);
+    QPointF location_;
 };
 
 #endif // PATTERNRECOGNIZER_H

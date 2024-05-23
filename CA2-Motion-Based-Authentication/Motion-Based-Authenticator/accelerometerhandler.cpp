@@ -8,43 +8,35 @@ AccelerometerHandler::AccelerometerHandler() {
     sensor_->setDataRate(100);
 
     connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::handleReading);
-    connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::readingChanged);
 
 
-    // Initialize the Kalman filter
-    int n = 3; // Number of states (x, y, z)
-    int m = 3; // Number of measurements (accelerometer outputs x, y, z)
-    double dt = 1.0 / sensor_->dataRate(); // Time step based on sensor data rate
+    int n = 3;
+    int m = 3;
+    double dt = 1.0 / sensor_->dataRate();
 
-    // System dynamics matrix (A)
     Eigen::MatrixXd A(n, n);
     A.setIdentity();
 
-    // Output matrix (C)
     Eigen::MatrixXd C(m, n);
     C.setIdentity();
 
-    // Process noise covariance (Q)
     Eigen::MatrixXd Q(n, n);
     Q.setIdentity();
-    Q *= 0.001; // Tunable
+    Q *= 0.001;
 
-    // Measurement noise covariance (R)
     Eigen::MatrixXd R(m, m);
     R.setIdentity();
-    R *= 0.01; // Tunable
+    R *= 0.01;
 
-    // Estimate error covariance (P)
     Eigen::MatrixXd P(n, n);
     P.setIdentity();
     P *= 1;
 
-    kf = new KalmanFilter(dt, A, C, Q, R, P);
+    kf_ = new KalmanFilter(dt, A, C, Q, R, P);
 
-    // Initialize the filter with an initial state (e.g., zero initial state)
     Eigen::VectorXd x0(n);
     x0.setZero();
-    kf->init(0, x0);
+    kf_->init(0, x0);
 }
 
 void AccelerometerHandler::start() {
@@ -56,30 +48,36 @@ void AccelerometerHandler::stop() {
 }
 
 void AccelerometerHandler::clear() {
-    readings.clear();
+    readings_.clear();
 }
 
 void AccelerometerHandler::handleReading() {
     QAccelerometerReading *reading = sensor_->reading();
-    Acceleration acceleration(reading->x(), reading->y(), reading->z());
 
-    // Update the Kalman filter with the new measurement
+    Acceleration rawAccel(reading->x(), reading->y(), reading->z());
+    Acceleration unbiasedAccel(rawAccel.x - readingsBias_.x,
+                               rawAccel.y - readingsBias_.y,
+                               rawAccel.z - readingsBias_.z);
+
     Eigen::VectorXd y(3);
-    y << reading->x(), reading->y(), reading->z();
-    kf->update(y);
+    y << unbiasedAccel.x, unbiasedAccel.y, unbiasedAccel.z;
+    kf_->update(y);
 
-    // Get the filtered state
-    Eigen::VectorXd filteredState = kf->state();
+    Eigen::VectorXd filteredState = kf_->state();
 
-    Acceleration filteredAccel(filteredState(0), filteredState(1), filteredState(2));
-    readings.append(filteredAccel);
+    Acceleration filteredAccel(qAbs(unbiasedAccel.x) < threshold_ ? 0 : unbiasedAccel.x,
+                               qAbs(unbiasedAccel.y) < threshold_ ? 0 : unbiasedAccel.y,
+                               qAbs(unbiasedAccel.z) < threshold_ ? 0 : unbiasedAccel.z);
 
-    emit updateAccelData(filteredState(0), filteredState(1), filteredState(2),
-                         filteredState(0) - readingsBias.x, filteredState(1) - readingsBias.y, filteredState(2) - readingsBias.z);
+    readings_.append(filteredAccel);
+    emit readingChanged(filteredAccel.x, filteredAccel.y, filteredAccel.z);
+    emit updateAccelData(rawAccel.x, rawAccel.y, rawAccel.z,
+                         filteredAccel.x, filteredAccel.y, filteredAccel.z);
 }
 
 void AccelerometerHandler::startCalibrate() {
-    const int durationMs = 1000;
+    const int durationMs = 2000;
+    readingsBias_ = Acceleration(0, 0, 0);
     QTimer::singleShot(durationMs, this, &AccelerometerHandler::stopCalibrate);
 }
 
@@ -88,16 +86,18 @@ void AccelerometerHandler::stopCalibrate() {
     qreal sumY = 0;
     qreal sumZ = 0;
 
-    for (const auto& reading : readings) {
+    for (const auto& reading : readings_) {
         sumX += reading.x;
         sumY += reading.y;
         sumZ += reading.z;
     }
 
-    readingsBias.x = sumX / readings.size();
-    readingsBias.y = sumY / readings.size();
-    readingsBias.z = sumZ / readings.size();
+    readingsBias_.x = sumX / readings_.size();
+    readingsBias_.y = sumY / readings_.size();
+    readingsBias_.z = sumZ / readings_.size();
 
-    qDebug() << "Bias value of each axis - X:" << readingsBias.x << "Y:" << readingsBias.y << "Z:" << readingsBias.z;
+    qDebug() << "Bias value of each axis - X:" << readingsBias_.x << "Y:" << readingsBias_.y << "Z:" << readingsBias_.z;
+
+    readings_.clear();
     emit calibrationFinished(true);
 }

@@ -19,25 +19,22 @@ public:
     void start();
     void stop();
     void clear();
-    QVector<Acceleration> getReadings() const { return readings; }
     int getDataRate() const { return sensor_->dataRate(); }
-    QAccelerometer *sensor_;
 
 Q_SIGNALS:
     void calibrationFinished(bool success);
-    void readingChanged();
+    void readingChanged(qreal x, qreal y, qreal z);
     void updateAccelData(qreal x, qreal y, qreal z, qreal xCal, qreal yCal, qreal zCal);
 
 private slots:
     void handleReading();
 
 private:
-
-
-private:
-    QVector<Acceleration> readings;
-    Acceleration readingsBias;
-    KalmanFilter *kf;
+    QVector<Acceleration> readings_;
+    Acceleration readingsBias_;
+    QAccelerometer *sensor_;
+    KalmanFilter *kf_;
+    const qreal threshold_ = 0.01;
 };
 
 #endif // ACCELEROMETERHANDLER_H
