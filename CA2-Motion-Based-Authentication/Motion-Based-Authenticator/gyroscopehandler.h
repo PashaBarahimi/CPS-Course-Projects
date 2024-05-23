@@ -1,19 +1,19 @@
-#ifndef ACCELEROMETERHANDLER_H
-#define ACCELEROMETERHANDLER_H
+#ifndef GYROSCOPEHANDLER_H
+#define GYROSCOPEHANDLER_H
 
 #include <QCoreApplication>
-#include <QAccelerometer>
-#include <QAccelerometerReading>
+#include <QGyroscope>
+#include <QGyroscopeReading>
 #include <QObject>
 #include <QDebug>
 
-#include "acceleration.h"
+#include "rotation.h"
 #include "kalmanfilter.h"
 
-class AccelerometerHandler : public QObject {
+class GyroscopeHandler : public QObject {
     Q_OBJECT
 public:
-    AccelerometerHandler();
+    GyroscopeHandler();
     void startCalibrate(int durationMs);
     void stopCalibrate();
     void start();
@@ -24,17 +24,17 @@ public:
 Q_SIGNALS:
     void calibrationFinished(bool success);
     void readingChanged(qreal x, qreal y, qreal z);
-    void updateAccelData(qreal x, qreal y, qreal z, qreal xCal, qreal yCal, qreal zCal);
+    void updateGyroData(qreal x, qreal y, qreal z, qreal xCal, qreal yCal, qreal zCal);
 
 private slots:
     void handleReading();
 
 private:
-    QVector<Acceleration> readings_;
-    Acceleration readingsBias_;
-    QAccelerometer *sensor_;
+    QVector<Rotation> readings_;
+    Rotation readingsBias_;
+    QGyroscope *sensor_;
     KalmanFilter *kf_;
-    const qreal threshold_ = 0.01;
+    const qreal threshold_ = 0.5;
 };
 
-#endif // ACCELEROMETERHANDLER_H
+#endif // GYROSCOPEHANDLER_H

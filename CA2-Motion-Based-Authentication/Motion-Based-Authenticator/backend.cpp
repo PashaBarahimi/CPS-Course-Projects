@@ -2,7 +2,7 @@
 
 Backend::Backend(QObject *parent)
     : QObject{parent} {
-    patternRecognizer_ = new PatternRecognizer(accelerometerHandler_);
+    patternRecognizer_ = new PatternRecognizer(accelerometerHandler_, gyroscopeHandler_);
     connect(patternRecognizer_, &PatternRecognizer::patternRecordingAddMovement, this, &Backend::patternRecordingAddMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecordingUpdateMovement, this, &Backend::patternRecordingUpdateMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecordingClearMovements, this, &Backend::patternRecordingClearMovements);
@@ -10,11 +10,15 @@ Backend::Backend(QObject *parent)
     connect(patternRecognizer_, &PatternRecognizer::patternRecordingFailed, this, &Backend::patternRecordingFailed);
     connect(accelerometerHandler_, &AccelerometerHandler::calibrationFinished, this, &Backend::calibrationFinished);
     connect(accelerometerHandler_, &AccelerometerHandler::updateAccelData, this, &Backend::updateAccelData);
+    connect(gyroscopeHandler_, &GyroscopeHandler::calibrationFinished, this, &Backend::calibrationFinished);
+    connect(gyroscopeHandler_, &GyroscopeHandler::updateGyroData, this, &Backend::updateGyroData);
 }
 
 void Backend::startCalibration() {
     qDebug() << "Calibration started";
-    accelerometerHandler_->startCalibrate();
+    int durationMs = 2000;
+    accelerometerHandler_->startCalibrate(durationMs);
+    gyroscopeHandler_->startCalibrate(durationMs);
 }
 
 void Backend::startPatternRecording() {
@@ -28,7 +32,6 @@ void Backend::stopPatternRecording() {
 }
 
 void Backend::startAuthentication() {
-    // Implement similar to startPatternRecording but store the pattern for comparison
     qDebug() << "Authentication recording started";
     patternRecognizer_->startRecording();
 }
@@ -46,10 +49,12 @@ void Backend::stopAuthentication() {
 
 void Backend::startShowingSensors() {
     accelerometerHandler_->start();
+    gyroscopeHandler_->start();
 }
 
 void Backend::stopShowingSensors() {
     accelerometerHandler_->stop();
+    gyroscopeHandler_->stop();
 }
 
 

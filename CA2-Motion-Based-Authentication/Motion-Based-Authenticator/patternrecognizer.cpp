@@ -2,31 +2,34 @@
 #include <QDebug>
 #include <QtMath>
 
-PatternRecognizer::PatternRecognizer(AccelerometerHandler* accelerometerHandler, QObject *parent)
-    : QObject(parent), isRecording(false), currentMovement(nullptr) {
-    accelerometerHandler_ = accelerometerHandler;
-    connect(accelerometerHandler_, &AccelerometerHandler::readingChanged, this, &PatternRecognizer::handleReading);
+PatternRecognizer::PatternRecognizer(AccelerometerHandler* accelerometerHandler,
+                                     GyroscopeHandler* gyroscopeHandler,
+                                     QObject *parent)
+    : QObject(parent), accelerometerHandler_(accelerometerHandler), gyroscopeHandler_(gyroscopeHandler),
+    isRecording_(false), isRecordingMovement_(false) {
+    connect(accelerometerHandler_, &AccelerometerHandler::readingChanged, this, &PatternRecognizer::handleAccelReading);
+    connect(gyroscopeHandler_, &GyroscopeHandler::readingChanged, this, &PatternRecognizer::handleGyroReading);
 }
 
 void PatternRecognizer::startRecording() {
-    if (isRecording) return;
-    isRecording = true;
+    if (isRecording_) return;
+    isRecording_ = true;
 
-    recordedPattern = MovementPattern();
+    recordedPattern_ = MovementPattern();
     readings_.clear();
     emit patternRecordingClearMovements();
     accelerometerHandler_->start();
 }
 
 void PatternRecognizer::stopRecording() {
-    if (!isRecording) return;
-    isRecording = false;
+    if (!isRecording_) return;
+    isRecording_ = false;
 
     location_ = QPointF(0, 0);
 
     accelerometerHandler_->stop();
 
-    if (recordedPattern.getPattern().isEmpty()) {
+    if (recordedPattern_.getPattern().isEmpty()) {
         emit patternRecordingFailed("No movements recorded");
     } else {
         emit patternRecordingSuccessful();
@@ -34,15 +37,22 @@ void PatternRecognizer::stopRecording() {
 }
 
 MovementPattern PatternRecognizer::getRecordedPattern() const {
-    return recordedPattern;
+    return recordedPattern_;
+}
+
+void PatternRecognizer::handleGyroReading(qreal x, qreal y, qreal z) {
+    if (!isRecording_) return;
+
+
+
 }
 
 bool PatternRecognizer::authenticateMovement(const MovementPattern& pattern) const {
-    return recordedPattern.matches(pattern);
+    return recordedPattern_.matches(pattern);
 }
 
-void PatternRecognizer::handleReading(qreal x, qreal y, qreal z) {
-    if (!isRecording) return;
+void PatternRecognizer::handleAccelReading(qreal x, qreal y, qreal z) {
+    if (!isRecording_) return;
     readings_.append(Acceleration(x, y, z));
     processReadings();
 }
@@ -60,10 +70,10 @@ void PatternRecognizer::processReadings() {
     sumX /= intervalCount;
     sumY /= intervalCount;
 
-    if (!isRecordingMovement && (sumX > 0.5 || sumY > 0.5)) {
+    if (!isRecordingMovement_ && (sumX > 0.5 || sumY > 0.5)) {
         qDebug() << "Recording movement";
-        isRecordingMovement = true;
-    } else if (isRecordingMovement) {
+        isRecordingMovement_ = true;
+    } else if (isRecordingMovement_) {
         auto velocity = calculateVelocity();
 
         int count = 0;
@@ -83,7 +93,7 @@ void PatternRecognizer::processReadings() {
         if (count > countTreshold) {
             qDebug() << "Movement ended";
 
-            isRecordingMovement = false;
+            isRecordingMovement_ = false;
             calculateDistance();
             readings_.clear();
         }
@@ -160,7 +170,7 @@ void PatternRecognizer::calculateDistance() {
 }
 
 void PatternRecognizer::addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle) {
-    currentMovement = new Movement(start, end, direction, angle);
-    recordedPattern.addMovement(currentMovement);
-    emit patternRecordingAddMovement(currentMovement);
+    currentMovement_ = new Movement(start, end, direction, angle);
+    recordedPattern_.addMovement(currentMovement_);
+    emit patternRecordingAddMovement(currentMovement_);
 }

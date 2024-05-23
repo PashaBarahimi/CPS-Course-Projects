@@ -6,6 +6,7 @@
 
 #include "movement.h"
 #include "accelerometerhandler.h"
+#include "gyroscopehandler.h"
 #include "patternrecognizer.h"
 
 class Backend : public QObject
@@ -48,6 +49,7 @@ Q_SIGNALS:
 
 private:
     AccelerometerHandler* accelerometerHandler_ = new AccelerometerHandler();
+    GyroscopeHandler* gyroscopeHandler_ = new GyroscopeHandler();
     PatternRecognizer* patternRecognizer_;
 };
 

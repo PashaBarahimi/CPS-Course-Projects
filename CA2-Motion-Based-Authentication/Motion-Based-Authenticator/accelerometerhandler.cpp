@@ -75,8 +75,8 @@ void AccelerometerHandler::handleReading() {
                          filteredAccel.x, filteredAccel.y, filteredAccel.z);
 }
 
-void AccelerometerHandler::startCalibrate() {
-    const int durationMs = 2000;
+void AccelerometerHandler::startCalibrate(int durationMs = 2000) {
+    readings_.clear();
     readingsBias_ = Acceleration(0, 0, 0);
     QTimer::singleShot(durationMs, this, &AccelerometerHandler::stopCalibrate);
 }

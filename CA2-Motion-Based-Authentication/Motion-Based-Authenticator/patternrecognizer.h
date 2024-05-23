@@ -8,13 +8,14 @@
 
 #include "movementpattern.h"
 #include "accelerometerhandler.h"
+#include "gyroscopehandler.h"
 #include "acceleration.h"
 
 class PatternRecognizer : public QObject
 {
     Q_OBJECT
 public:
-    PatternRecognizer(AccelerometerHandler *accelerometerHandler, QObject *parent = nullptr);
+    PatternRecognizer(AccelerometerHandler* accelerometerHandler, GyroscopeHandler* gyroscopeHandler, QObject *parent = nullptr);
     void startRecording();
     void stopRecording();
     QPair<qreal, qreal> calculateVelocity() const;
@@ -29,7 +30,8 @@ signals:
     void patternRecordingFailed(const QString &error);
 
 private slots:
-    void handleReading(qreal x, qreal y, qreal z);
+    void handleAccelReading(qreal x, qreal y, qreal z);
+    void handleGyroReading(qreal x, qreal y, qreal z);
 
 private:
     void calculateDistance();
@@ -38,11 +40,12 @@ private:
 
 private:
     AccelerometerHandler *accelerometerHandler_;
-    MovementPattern recordedPattern;
-    bool isRecording;
-    bool isRecordingMovement;
+    GyroscopeHandler *gyroscopeHandler_;
+    Movement *currentMovement_;
+    MovementPattern recordedPattern_;
+    bool isRecording_;
+    bool isRecordingMovement_;
     QVector<Acceleration> readings_;
-    Movement *currentMovement;
     QPointF location_;
 };
 
