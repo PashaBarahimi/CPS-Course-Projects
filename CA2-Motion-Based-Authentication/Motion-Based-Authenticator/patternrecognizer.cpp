@@ -5,26 +5,29 @@
 PatternRecognizer::PatternRecognizer(AccelerometerHandler* accelerometerHandler,
                                      GyroscopeHandler* gyroscopeHandler,
                                      QObject *parent)
-    : QObject(parent), accelerometerHandler_(accelerometerHandler), gyroscopeHandler_(gyroscopeHandler),
-    isRecording_(false), isRecordingMovement_(false) {
+    : QObject(parent), accelerometerHandler_(accelerometerHandler), gyroscopeHandler_(gyroscopeHandler) {
+    location_ = QPointF(0, 0);
+    state_ = State::Stopped;
+    angle_ = Angle::Degree0;
+
     connect(accelerometerHandler_, &AccelerometerHandler::readingChanged, this, &PatternRecognizer::handleAccelReading);
     connect(gyroscopeHandler_, &GyroscopeHandler::readingChanged, this, &PatternRecognizer::handleGyroReading);
 }
 
 void PatternRecognizer::startRecording() {
-    if (isRecording_) return;
-    isRecording_ = true;
+    if (state_ != State::Stopped) return;
 
+    state_ = State::OutMovement;
     recordedPattern_ = MovementPattern();
-    readings_.clear();
+    accelReadings_.clear();
     emit patternRecordingClearMovements();
     accelerometerHandler_->start();
 }
 
 void PatternRecognizer::stopRecording() {
-    if (!isRecording_) return;
-    isRecording_ = false;
+    if (state_ == State::Stopped) return;
 
+    state_ = State::Stopped;
     location_ = QPointF(0, 0);
 
     accelerometerHandler_->stop();
@@ -41,9 +44,7 @@ MovementPattern PatternRecognizer::getRecordedPattern() const {
 }
 
 void PatternRecognizer::handleGyroReading(qreal x, qreal y, qreal z) {
-    if (!isRecording_) return;
-
-
+    if (state_ != State::OutMovement) return;
 
 }
 
@@ -52,33 +53,34 @@ bool PatternRecognizer::authenticateMovement(const MovementPattern& pattern) con
 }
 
 void PatternRecognizer::handleAccelReading(qreal x, qreal y, qreal z) {
-    if (!isRecording_) return;
-    readings_.append(Acceleration(x, y, z));
+    if (state_ == State::Stopped) return;
+
+    accelReadings_.append(Acceleration(x, y, z));
     processReadings();
 }
 
 void PatternRecognizer::processReadings() {
     const int intervalCount = accelerometerHandler_->getDataRate() / 10;
-    if (readings_.size() < intervalCount) return;
+    if (accelReadings_.size() < intervalCount) return;
 
     qreal sumX = 0;
     qreal sumY = 0;
-    for (int i = readings_.size() - intervalCount; i < readings_.size(); ++i) {
-        sumX += readings_[i].x;
-        sumY += readings_[i].y;
+    for (int i = accelReadings_.size() - intervalCount; i < accelReadings_.size(); ++i) {
+        sumX += accelReadings_[i].x;
+        sumY += accelReadings_[i].y;
     }
     sumX /= intervalCount;
     sumY /= intervalCount;
 
-    if (!isRecordingMovement_ && (sumX > 0.5 || sumY > 0.5)) {
+    if (state_ == State::OutMovement && (sumX > 0.5 || sumY > 0.5)) {
         qDebug() << "Recording movement";
-        isRecordingMovement_ = true;
-    } else if (isRecordingMovement_) {
+        state_ = State::InMovement;
+    } else if (state_ == State::InMovement) {
         auto velocity = calculateVelocity();
 
         int count = 0;
-        for (int i = readings_.size() - 1; i >= 0; --i) {
-            if (qAbs(readings_[i].x) < 0.1 && qAbs(readings_[i].y) < 0.1) {
+        for (int i = accelReadings_.size() - 1; i >= 0; --i) {
+            if (qAbs(accelReadings_[i].x) < 0.1 && qAbs(accelReadings_[i].y) < 0.1) {
                 count++;
             } else {
                 break;
@@ -93,9 +95,9 @@ void PatternRecognizer::processReadings() {
         if (count > countTreshold) {
             qDebug() << "Movement ended";
 
-            isRecordingMovement_ = false;
+            state_ = State::OutMovement;
             calculateDistance();
-            readings_.clear();
+            accelReadings_.clear();
         }
     }
 }
@@ -105,7 +107,7 @@ QPair<qreal, qreal> PatternRecognizer::calculateVelocity() const {
     qreal velocityY = 0;
     const qreal deltaTime = 1.0 / accelerometerHandler_->getDataRate();
 
-    for (auto reading : readings_) {
+    for (auto reading : accelReadings_) {
         qreal accelX = reading.x;
         qreal accelY = reading.y;
 
@@ -127,7 +129,7 @@ void PatternRecognizer::calculateDistance() {
 
     const qreal deltaTime = 1.0 / accelerometerHandler_->getDataRate();
 
-    for (auto reading : readings_) {
+    for (auto reading : accelReadings_) {
         qDebug() << "Reading:" << reading.x << reading.y;
 
         sumX += qAbs(reading.x);

@@ -10,11 +10,19 @@
 #include "accelerometerhandler.h"
 #include "gyroscopehandler.h"
 #include "acceleration.h"
+#include "angle.h"
 
 class PatternRecognizer : public QObject
 {
     Q_OBJECT
 public:
+    enum State {
+        Stopped,
+        InMovement,
+        OutMovement
+    };
+    Q_ENUM(State)
+
     PatternRecognizer(AccelerometerHandler* accelerometerHandler, GyroscopeHandler* gyroscopeHandler, QObject *parent = nullptr);
     void startRecording();
     void stopRecording();
@@ -43,10 +51,10 @@ private:
     GyroscopeHandler *gyroscopeHandler_;
     Movement *currentMovement_;
     MovementPattern recordedPattern_;
-    bool isRecording_;
-    bool isRecordingMovement_;
-    QVector<Acceleration> readings_;
+    QVector<Acceleration> accelReadings_;
     QPointF location_;
+    State state_;
+    Angle::Type angle_;
 };
 
 #endif // PATTERNRECOGNIZER_H
