@@ -19,6 +19,7 @@ public:
     void stop();
     void clear();
     QVector<Acceleration> getReadings() const { return readings; }
+    int getDataRate() const { return sensor_->dataRate(); }
     QAccelerometer *sensor_;
 
 Q_SIGNALS:
