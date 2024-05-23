@@ -9,6 +9,42 @@ AccelerometerHandler::AccelerometerHandler() {
 
     connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::handleReading);
     connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::readingChanged);
+
+
+    // Initialize the Kalman filter
+    int n = 3; // Number of states (x, y, z)
+    int m = 3; // Number of measurements (accelerometer outputs x, y, z)
+    double dt = 1.0 / sensor_->dataRate(); // Time step based on sensor data rate
+
+    // System dynamics matrix (A)
+    Eigen::MatrixXd A(n, n);
+    A.setIdentity();
+
+    // Output matrix (C)
+    Eigen::MatrixXd C(m, n);
+    C.setIdentity();
+
+    // Process noise covariance (Q)
+    Eigen::MatrixXd Q(n, n);
+    Q.setIdentity();
+    Q *= 0.001; // Tunable
+
+    // Measurement noise covariance (R)
+    Eigen::MatrixXd R(m, m);
+    R.setIdentity();
+    R *= 0.01; // Tunable
+
+    // Estimate error covariance (P)
+    Eigen::MatrixXd P(n, n);
+    P.setIdentity();
+    P *= 1;
+
+    kf = new KalmanFilter(dt, A, C, Q, R, P);
+
+    // Initialize the filter with an initial state (e.g., zero initial state)
+    Eigen::VectorXd x0(n);
+    x0.setZero();
+    kf->init(0, x0);
 }
 
 void AccelerometerHandler::start() {
@@ -26,9 +62,20 @@ void AccelerometerHandler::clear() {
 void AccelerometerHandler::handleReading() {
     QAccelerometerReading *reading = sensor_->reading();
     Acceleration acceleration(reading->x(), reading->y(), reading->z());
-    readings.append(acceleration);
-    emit updateAccelData(acceleration.x, acceleration.y, acceleration.z,
-                        acceleration.x - readingsBias.x, acceleration.y - readingsBias.y, acceleration.z - readingsBias.z);
+
+    // Update the Kalman filter with the new measurement
+    Eigen::VectorXd y(3);
+    y << reading->x(), reading->y(), reading->z();
+    kf->update(y);
+
+    // Get the filtered state
+    Eigen::VectorXd filteredState = kf->state();
+
+    Acceleration filteredAccel(filteredState(0), filteredState(1), filteredState(2));
+    readings.append(filteredAccel);
+
+    emit updateAccelData(filteredState(0), filteredState(1), filteredState(2),
+                         filteredState(0) - readingsBias.x, filteredState(1) - readingsBias.y, filteredState(2) - readingsBias.z);
 }
 
 void AccelerometerHandler::startCalibrate() {

@@ -4,6 +4,8 @@ project(MotionBasedAuthenticator VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
+
 find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Qml)
 find_package(Qt6 6.4 REQUIRED COMPONENTS Sensors)
 
@@ -35,6 +37,7 @@ qt_add_qml_module(MotionBasedAuthenticator
         SOURCES movementpattern.h movementpattern.cpp
         SOURCES patternrecognizer.h patternrecognizer.cpp
         SOURCES acceleration.h
+        SOURCES kalmanfilter.h kalmanfilter.cpp
 )
 
 set_target_properties(MotionBasedAuthenticator PROPERTIES

@@ -8,6 +8,7 @@
 #include <QDebug>
 
 #include "acceleration.h"
+#include "kalmanfilter.h"
 
 class AccelerometerHandler : public QObject {
     Q_OBJECT
@@ -36,6 +37,7 @@ private:
 private:
     QVector<Acceleration> readings;
     Acceleration readingsBias;
+    KalmanFilter *kf;
 };
 
 #endif // ACCELEROMETERHANDLER_H
