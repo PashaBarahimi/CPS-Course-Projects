@@ -41,6 +41,7 @@ Q_SIGNALS:
     void patternRecordingClearMovements();
     void patternRecordingSuccessful();
     void patternRecordingFailed(const QString& error);
+    void patternRecordingChangeAngle(const QString& angle);
 
     void authenticationAddMovement(Movement* movement);
     void authenticationUpdateMovement(Movement* movement);

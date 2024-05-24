@@ -62,6 +62,10 @@ ApplicationWindow {
             recorderPage.sendFailureNotification("Pattern Recording Failed! " + error)
         }
 
+        onPatternRecordingChangeAngle: (angleStr) => {
+            recorderPage.changeAngle(angleStr)
+        }
+
         onAuthenticationAddMovement: (movement) => {
             authPage.appendMovement(movement)
         }

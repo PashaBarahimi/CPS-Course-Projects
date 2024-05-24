@@ -2,7 +2,6 @@
 
 Backend::Backend(QObject *parent)
     : QObject{parent} {
-    patternRecognizer_ = new PatternRecognizer(accelerometerHandler_, gyroscopeHandler_);
     patternRecorder_ = new PatternRecorder(accelerometerHandler_, gyroscopeHandler_);
     authenticator_ = new Authenticator(accelerometerHandler_, gyroscopeHandler_);
 
@@ -10,6 +9,7 @@ Backend::Backend(QObject *parent)
     connect(patternRecorder_, &PatternRecorder::patternRecordingClearMovements, this, &Backend::patternRecordingClearMovements);
     connect(patternRecorder_, &PatternRecorder::patternRecordingSuccessful, this, &Backend::patternRecordingSuccessful);
     connect(patternRecorder_, &PatternRecorder::patternRecordingFailed, this, &Backend::patternRecordingFailed);
+    connect(patternRecorder_, &PatternRecorder::patternRecordingChangeAngle, this, &Backend::patternRecordingChangeAngle);
     connect(authenticator_, &Authenticator::authenticationAddMovement, this, &Backend::authenticationAddMovement);
     connect(authenticator_, &Authenticator::authenticationClearMovements, this, &Backend::authenticationClearMovements);
     connect(authenticator_, &Authenticator::authenticationSuccessful, this, &Backend::authenticationSuccessful);

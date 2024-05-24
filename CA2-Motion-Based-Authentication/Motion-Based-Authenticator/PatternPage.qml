@@ -18,6 +18,8 @@ Page {
     signal recordingEnd()
     signal backClicked()
 
+    property string currentAngle: "0°"
+
     function appendMovement(movement) {
         movements.push(movement);
         onMovementsChanged();
@@ -44,6 +46,10 @@ Page {
 
     function prepareToClose() {
         recordButton.stopIfStarted();
+    }
+
+    function changeAngle(angleStr) {
+        currentAngle = angleStr;
     }
 
     onMovementsChanged: {
@@ -73,6 +79,24 @@ Page {
             Label {
                 text: page.title
                 anchors.centerIn: parent
+            }
+        }
+
+        RowLayout {
+            id: angleDisplay
+            anchors.left: parent.left
+            anchors.right: parent.right
+            Layout.alignment: Qt.AlignHCenter
+
+            Label {
+                text: "Angle: "
+                font.pixelSize: 20
+            }
+
+            Label {
+                text: page.currentAngle
+                font.pixelSize: 20
+                color: "blue"
             }
         }
 

@@ -24,6 +24,7 @@ signals:
     void patternRecordingClearMovements();
     void patternRecordingSuccessful();
     void patternRecordingFailed(const QString &error);
+    void patternRecordingChangeAngle(const QString& angle);
 
 private slots:
     void addMovement(Movement *movement);

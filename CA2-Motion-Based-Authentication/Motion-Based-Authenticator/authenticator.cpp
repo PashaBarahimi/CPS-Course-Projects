@@ -6,7 +6,7 @@ Authenticator::Authenticator(AccelerometerHandler *accelerometerHandler,
                                  QObject *parent)
     : QObject{parent}
 {
-    patternRecognizer_ = new PatternRecognizer(accelerometerHandler, gyroscopeHandler);
+    patternRecognizer_ = new PatternRecognizer("Authenticator Recognizer", accelerometerHandler, gyroscopeHandler);
 
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &Authenticator::authenticationAddMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &Authenticator::addMovement);

@@ -5,13 +5,14 @@ PatternRecorder::PatternRecorder(AccelerometerHandler *accelerometerHandler,
                                  QObject *parent)
     : QObject{parent}
 {
-    patternRecognizer_ = new PatternRecognizer(accelerometerHandler, gyroscopeHandler);
+    patternRecognizer_ = new PatternRecognizer("Recorder Recognizer", accelerometerHandler, gyroscopeHandler);
 
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &PatternRecorder::patternRecordingAddMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &PatternRecorder::addMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingClearMovements, this, &PatternRecorder::clearMovements);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingUpdateMovement, this, &PatternRecorder::patternRecordingUpdateMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingClearMovements, this, &PatternRecorder::patternRecordingClearMovements);
+    connect(patternRecognizer_, &PatternRecognizer::patternRecognizingChangeAngle, this, &PatternRecorder::patternRecordingChangeAngle);
 }
 
 void PatternRecorder::startRecording() {
