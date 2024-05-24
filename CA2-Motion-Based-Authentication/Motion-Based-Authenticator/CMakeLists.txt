@@ -40,6 +40,8 @@ qt_add_qml_module(MotionBasedAuthenticator
         SOURCES kalmanfilter.h kalmanfilter.cpp
         SOURCES gyroscopehandler.h gyroscopehandler.cpp
         SOURCES rotation.h
+        SOURCES patternrecorder.h patternrecorder.cpp
+        SOURCES authenticator.h authenticator.cpp
 )
 
 set_target_properties(MotionBasedAuthenticator PROPERTIES

@@ -29,15 +29,11 @@ public:
     void startRecording();
     void stopRecording();
     QPair<qreal, qreal> calculateVelocity() const;
-    MovementPattern getRecordedPattern() const;
-    bool authenticateMovement(const MovementPattern &pattern) const;
 
 signals:
-    void patternRecordingAddMovement(Movement *movement);
-    void patternRecordingUpdateMovement(Movement *movement);
-    void patternRecordingClearMovements();
-    void patternRecordingSuccessful();
-    void patternRecordingFailed(const QString &error);
+    void patternRecognizingAddMovement(Movement *movement);
+    void patternRecognizingUpdateMovement(Movement *movement);
+    void patternRecognizingClearMovements();
 
 private slots:
     void handleAccelReading(qreal x, qreal y, qreal z);
@@ -54,7 +50,6 @@ private:
     AccelerometerHandler *accelerometerHandler_;
     GyroscopeHandler *gyroscopeHandler_;
     Movement *currentMovement_;
-    MovementPattern recordedPattern_;
     QVector<Acceleration> accelReadings_;
     QVector<Rotation> gyroReadings_;
     QPointF location_;

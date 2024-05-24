@@ -3,11 +3,17 @@
 Backend::Backend(QObject *parent)
     : QObject{parent} {
     patternRecognizer_ = new PatternRecognizer(accelerometerHandler_, gyroscopeHandler_);
-    connect(patternRecognizer_, &PatternRecognizer::patternRecordingAddMovement, this, &Backend::patternRecordingAddMovement);
-    connect(patternRecognizer_, &PatternRecognizer::patternRecordingUpdateMovement, this, &Backend::patternRecordingUpdateMovement);
-    connect(patternRecognizer_, &PatternRecognizer::patternRecordingClearMovements, this, &Backend::patternRecordingClearMovements);
-    connect(patternRecognizer_, &PatternRecognizer::patternRecordingSuccessful, this, &Backend::patternRecordingSuccessful);
-    connect(patternRecognizer_, &PatternRecognizer::patternRecordingFailed, this, &Backend::patternRecordingFailed);
+    patternRecorder_ = new PatternRecorder(accelerometerHandler_, gyroscopeHandler_);
+    authenticator_ = new Authenticator(accelerometerHandler_, gyroscopeHandler_);
+
+    connect(patternRecorder_, &PatternRecorder::patternRecordingAddMovement, this, &Backend::patternRecordingAddMovement);
+    connect(patternRecorder_, &PatternRecorder::patternRecordingClearMovements, this, &Backend::patternRecordingClearMovements);
+    connect(patternRecorder_, &PatternRecorder::patternRecordingSuccessful, this, &Backend::patternRecordingSuccessful);
+    connect(patternRecorder_, &PatternRecorder::patternRecordingFailed, this, &Backend::patternRecordingFailed);
+    connect(authenticator_, &Authenticator::authenticationAddMovement, this, &Backend::authenticationAddMovement);
+    connect(authenticator_, &Authenticator::authenticationClearMovements, this, &Backend::authenticationClearMovements);
+    connect(authenticator_, &Authenticator::authenticationSuccessful, this, &Backend::authenticationSuccessful);
+    connect(authenticator_, &Authenticator::authenticationFailed, this, &Backend::authenticationFailed);
     connect(accelerometerHandler_, &AccelerometerHandler::calibrationFinished, this, &Backend::calibrationFinished);
     connect(accelerometerHandler_, &AccelerometerHandler::updateAccelData, this, &Backend::updateAccelData);
     connect(gyroscopeHandler_, &GyroscopeHandler::calibrationFinished, this, &Backend::calibrationFinished);
@@ -23,28 +29,30 @@ void Backend::startCalibration() {
 
 void Backend::startPatternRecording() {
     qDebug() << "Pattern recording started";
-    patternRecognizer_->startRecording();
+    patternRecorder_->startRecording();
 }
 
 void Backend::stopPatternRecording() {
     qDebug() << "Pattern recording finished";
-    patternRecognizer_->stopRecording();
+    patternRecorder_->stopRecording();
 }
 
 void Backend::startAuthentication() {
     qDebug() << "Authentication recording started";
-    patternRecognizer_->startRecording();
+
+    auto recordedPattern = patternRecorder_->getPattern();
+    if (recordedPattern.getPattern().isEmpty()) {
+        emit authenticationFailed("No Pattern recorded");
+        return;
+    }
+
+    authenticator_->startAuthenticating();
 }
 
 void Backend::stopAuthentication() {
     qDebug() << "Authentication recording finished";
-    patternRecognizer_->stopRecording();
-    MovementPattern authenticationPattern = patternRecognizer_->getRecordedPattern();
-    if (patternRecognizer_->authenticateMovement(authenticationPattern)) {
-        emit authenticationSuccessful();
-    } else {
-        emit authenticationFailed("Pattern mismatch");
-    }
+
+    authenticator_->stopAuthenticating(patternRecorder_->getPattern());
 }
 
 void Backend::startShowingSensors() {

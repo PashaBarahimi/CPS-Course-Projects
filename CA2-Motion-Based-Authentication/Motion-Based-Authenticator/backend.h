@@ -8,6 +8,8 @@
 #include "accelerometerhandler.h"
 #include "gyroscopehandler.h"
 #include "patternrecognizer.h"
+#include "patternrecorder.h"
+#include "authenticator.h"
 
 class Backend : public QObject
 {
@@ -51,6 +53,8 @@ private:
     AccelerometerHandler* accelerometerHandler_ = new AccelerometerHandler();
     GyroscopeHandler* gyroscopeHandler_ = new GyroscopeHandler();
     PatternRecognizer* patternRecognizer_;
+    PatternRecorder* patternRecorder_;
+    Authenticator* authenticator_;
 };
 
 #endif // BACKEND_H

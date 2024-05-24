@@ -18,10 +18,9 @@ void PatternRecognizer::startRecording() {
     if (state_ != State::Stopped) return;
 
     state_ = State::OutMovement;
-    recordedPattern_ = MovementPattern();
     accelReadings_.clear();
     gyroReadings_.clear();
-    emit patternRecordingClearMovements();
+    emit patternRecognizingClearMovements();
     accelerometerHandler_->start();
     gyroscopeHandler_->start();
 }
@@ -32,18 +31,11 @@ void PatternRecognizer::stopRecording() {
     state_ = State::Stopped;
     location_ = QPointF(0, 0);
 
+    qDebug() << "State changed to Stopped";
+
     accelerometerHandler_->stop();
     gyroscopeHandler_->stop();
 
-    if (recordedPattern_.getPattern().isEmpty()) {
-        emit patternRecordingFailed("No movements recorded");
-    } else {
-        emit patternRecordingSuccessful();
-    }
-}
-
-MovementPattern PatternRecognizer::getRecordedPattern() const {
-    return recordedPattern_;
 }
 
 void PatternRecognizer::handleGyroReading(qreal x, qreal y, qreal z) {
@@ -90,7 +82,7 @@ QQuaternion PatternRecognizer::integrateGyroReadings(const QVector<Rotation>& re
     QQuaternion totalRotation(1, 0, 0, 0);
 
     for (const auto& reading : readings) {
-        qDebug() << "Gyro Reading:" << reading.x << reading.y << reading.z;
+        // qDebug() << "Gyro Reading:" << reading.x << reading.y << reading.z;
 
         double wx = reading.x;
         double wy = reading.y;
@@ -110,10 +102,6 @@ QQuaternion PatternRecognizer::integrateGyroReadings(const QVector<Rotation>& re
     }
 
     return totalRotation.normalized();
-}
-
-bool PatternRecognizer::authenticateMovement(const MovementPattern& pattern) const {
-    return recordedPattern_.matches(pattern);
 }
 
 void PatternRecognizer::handleAccelReading(qreal x, qreal y, qreal z) {
@@ -263,6 +251,5 @@ void PatternRecognizer::calculateDistance() {
 
 void PatternRecognizer::addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle) {
     currentMovement_ = new Movement(start, end, direction, angle);
-    recordedPattern_.addMovement(currentMovement_);
-    emit patternRecordingAddMovement(currentMovement_);
+    emit patternRecognizingAddMovement(currentMovement_);
 }
