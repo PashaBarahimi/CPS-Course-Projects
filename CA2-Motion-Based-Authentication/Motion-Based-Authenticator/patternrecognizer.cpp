@@ -213,8 +213,8 @@ void PatternRecognizer::processAccelReadings()
     if (state_ == State::Recognizing && (sumX > 0.5 || sumY > 0.5))
     {
         qDebug() << name_ << ": " << "State changed to InMovement";
-        // state_ = State::InMovement;
-        // processGyroReadings();
+        state_ = State::InMovement;
+        processGyroReadings();
     }
     else if (state_ == State::InMovement)
     {
