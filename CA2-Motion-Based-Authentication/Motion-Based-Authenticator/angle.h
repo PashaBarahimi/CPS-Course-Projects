@@ -29,6 +29,13 @@ public:
         case Degree270: return "-90";
         }
     }
+
+    friend Angle::Type operator+(Angle::Type lhs, Angle::Type rhs)
+    {
+        int result = static_cast<int>(lhs) + static_cast<int>(rhs);
+        result %= 4; // Ensure the result wraps around within the range 0-3
+        return static_cast<Angle::Type>(result);
+    }
 };
 
 #endif // ANGLE_H

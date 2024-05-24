@@ -5,11 +5,13 @@
 #include <QAccelerometer>
 #include <QTimer>
 #include <QPair>
+#include <QQuaternion>
 
 #include "movementpattern.h"
 #include "accelerometerhandler.h"
 #include "gyroscopehandler.h"
 #include "acceleration.h"
+#include "rotation.h"
 #include "angle.h"
 
 class PatternRecognizer : public QObject
@@ -43,7 +45,9 @@ private slots:
 
 private:
     void calculateDistance();
-    void processReadings();
+    QQuaternion integrateGyroReadings(const QVector<Rotation>& readings, double dt);
+    void processAccelReadings();
+    void processGyroReadings();
     void addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle);
 
 private:
@@ -52,6 +56,7 @@ private:
     Movement *currentMovement_;
     MovementPattern recordedPattern_;
     QVector<Acceleration> accelReadings_;
+    QVector<Rotation> gyroReadings_;
     QPointF location_;
     State state_;
     Angle::Type angle_;

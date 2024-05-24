@@ -71,8 +71,6 @@ void GyroscopeHandler::handleReading() {
     emit readingChanged(filteredGyro.x, filteredGyro.y, filteredGyro.z);
     emit updateGyroData(rawGyro.x, rawGyro.y, rawGyro.z,
                         filteredGyro.x, filteredGyro.y, filteredGyro.z);
-
-    qDebug() << "Gyro values - X:" << filteredGyro.x << "Y:" << filteredGyro.y << "Z:" << filteredGyro.z;
 }
 
 void GyroscopeHandler::startCalibrate(int durationMs = 2000) {
