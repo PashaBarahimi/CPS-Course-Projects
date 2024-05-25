@@ -76,7 +76,21 @@ Also, the following signals are used to send data to the UI:
 
 ### Backend
 
-TODO
+The backend is responsible for processing the motion data and comparing it with the recorded data. The backend consists of the following classes and structures:
+
+- **Acceleration**: This struct is responsible for holding the acceleration data of the phone.
+- **AccelerometerHandler**: This class is responsible for reading the acceleration data from the accelerometer sensor and processing it.
+- **Angle**: This class contains an Enum for the angles.
+- **Authenticator**: This class is responsible for authenticating the user. It compares the motion data of the user with the recorded data.
+- **Backend**: This class is responsible for the communication between the UI and the backend. It has the methods mentioned in the UI section.
+- **Direction**: This class contains an Enum for the directions.
+- **GyroscopeHandler**: This class is responsible for reading the gyroscope data from the gyroscope sensor and processing it.
+- **KalmanFilter**: This class is responsible for filtering the sensor data.
+- **Movement**: This class is responsible for holding the movement data of the phone.
+- **MovementPattern**: This class is responsible for holding the pattern data of the phone.
+- **PatternRecognizer**: This class is responsible for recognizing the pattern of the user.
+- **PatternRecorder**: This class is responsible for recording the pattern of the user.
+- **Rotation**: This class holds the rotation data of the phone.
 
 ## Hardware/Software Platform Information
 
@@ -99,7 +113,30 @@ The following tools and libraries are used in this project:
 
 ## Tasks Division
 
-TODO
+The tasks and their division are as follows:
+
+- **UI**:
+  - **Home Screen**: Ali Padyav
+  - **Pattern's Page**: Pasha Barahimi
+  - **Sensors' Page**: Misagh Mohaghegh
+  - **Integration with Backend**: Saman Eslami
+- **Backend**:
+  - **Acceleration**: Ali Padyav
+  - **Accelerometer Handler**: Saman Eslami
+  - **Angle**: Misagh Mohaghegh
+  - **Authenticator**: Ali Padyav
+  - **Backend**: Pasha Barahimi
+  - **Direction**: Misagh Mohaghegh
+  - **Gyroscope Handler**: Pasha Barahimi
+  - **Kalman Filter**: Ali Padyav
+  - **Movement**: Saman Eslami
+  - **Movement Pattern**: Saman Eslami
+  - **Pattern Recognizer**: Misagh Mohaghegh
+  - **Pattern Recorder**: Misagh Mohaghegh
+  - **Rotation**: Pasha Barahimi
+- **Others**:
+  - **Perfetto**: Misagh Mohaghegh, Saman Eslami
+  - **README**: Ali Padyav, Pasha Barahimi
 
 ## Test Settings and Scenarios
 
