@@ -5,7 +5,7 @@
 AccelerometerHandler::AccelerometerHandler() {
     sensor_ = new QAccelerometer(this);
     sensor_->setAccelerationMode(QAccelerometer::User);
-    sensor_->setDataRate(200);
+    sensor_->setDataRate(20);
 
     connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::handleReading);
 

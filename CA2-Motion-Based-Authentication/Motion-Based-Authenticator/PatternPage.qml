@@ -20,13 +20,23 @@ Page {
 
     property string currentAngle: "0°"
 
+    function toCm(movement) {
+        movement.start.x = movement.start.x * 100
+        movement.start.y = movement.start.y * 100
+        movement.end.x = movement.end.x * 100
+        movement.end.y = movement.end.y * 100
+        return movement
+    }
+
     function appendMovement(movement) {
+        movement = toCm(movement)
         movements.push(movement);
         onMovementsChanged();
     }
 
     function updateLastMovement(movement) {
         if (movements.length > 0) {
+            movement = toCm(movement)
             movements[movements.length - 1] = movement;
             onMovementsChanged();
         }
@@ -49,7 +59,7 @@ Page {
     }
 
     function changeAngle(angleStr) {
-        currentAngle = angleStr;
+        currentAngle = angleStr + "°";
     }
 
     onMovementsChanged: {
@@ -82,6 +92,10 @@ Page {
             }
         }
 
+        Notification {
+            id: notification
+        }
+
         RowLayout {
             id: angleDisplay
             anchors.left: parent.left
@@ -90,24 +104,21 @@ Page {
 
             Label {
                 text: "Angle: "
-                font.pixelSize: 20
+                font.pixelSize: 18
+                leftPadding: parent.width * 0.05
             }
 
             Label {
                 text: page.currentAngle
-                font.pixelSize: 20
-                color: "blue"
+                color: "white"
+                font.pixelSize: 18
             }
-        }
-
-        Notification {
-            id: notification
         }
 
         Rectangle {
             id: diagram
             Layout.preferredWidth: parent.width * 0.9
-            Layout.preferredHeight: parent.height * 0.4
+            Layout.preferredHeight: parent.height * 0.35
             Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
             radius: 10
             color: "White"
