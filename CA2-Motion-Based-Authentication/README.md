@@ -13,8 +13,6 @@
   - [Tasks Division](#tasks-division)
   - [Test Settings and Scenarios](#test-settings-and-scenarios)
   - [Results](#results)
-    - [Perfetto](#perfetto)
-    - [Application](#application)
   - [Questions](#questions)
   - [References](#references)
 
@@ -176,42 +174,64 @@ Failed Authentication:
 
 ![failure](assets/failure.gif)
 
-### Perfetto
-
-TODO
-
-### Application
-
 ## Questions
 
 1. **Using the Perfetto tool, trace and profile the application. Then, answer the following questions:**
    1. **What happens in the OS between a Read operation request from the sensors and the data being delivered to the application? How much time does it take?**
-
-        TODO
+    There is an abstraction layer between the underlying physical sensor hardware and the API that Android apps use.  
+    The API defined by Android sensors framework (such as SensorEventListener) is used by apps which uses the hardware abstraction layer (HAL) to get the required data from the hardware.  
+    When a request is made from an app to read a sensor's data, it is done through the sensors framework which uses the Sensors HAL to get the response from the hardware.  
+    The response goes back to the HAL and over the framework to reach the application.
+    ![Sensors HAL](assets/SensorsHal.png)
+    As we can see, after our Qt program is launched, the `sample_period_ns` of the accelerometer sensor is set to a default value, which changes to our set frequency (20hz) quickly afterwards. The same is for the gyroscope which changes to a 100hz polling frequency.  
+    For example, our request for the linear acceleration sensor to change its frequency was sent on 00:00:03.028497238 and received on 00:00:03.028676040 which took about 0.18ms.
 
    2. **Compare the sensors' rate in the Perfetto trace with the rate in the application.**
-
-        TODO
+    Setting the frequency of sensors in Qt does not actually guarantee a reliable change in the hardware, but it usually does if the number is reasonable.  
+    We can check if setting our accelerometer to 20hz and our gyroscope to 100hz was successful:
+    ![Accelerometer Readings](assets/AccelSensor.png)
+    As we can see, the distance between 2 readings of the accelerometer is about 54ms here. the next distance is 46ms.  
+    To achieve 20hz frequency, there should be a reading every 50ms. Whilst the timings are not exactly 50ms, they average out to 50ms which is $1000/50=20$ readings per second.
+    ![Gyroscope Readings](assets/GyroSensor.png)
+    Here the distance is 11ms which is close to 10ms needed to have $1000/10=100$ readings per second.
 
    3. **Are there any conflicts (such as a thread's busy waiting until another thread finishes) between the processes (such as the GUI library) and the sensor readings? Justify your answers.**
-
-        TODO
+    There may be slight conflicts but it is mostly handled by the OS and the hardware using interrupts and other mechanisms.  
+    Event queues may be used to gather the sensor data so it can be processed later without loss.  
+    The sensors framework is designed to be asynchronous and non-blocking so that the app can continue to run without waiting for the sensor data to be ready and busy waiting problems.
+    ![Context Switch](assets/ContextSwitch.png)
+    ![Qt Profiler](assets/QtProfiler.png)
 
    4. **Compare the sensors' data processing time with other CPU processing time.**
-
-        TODO
+    We except the sensor reading to not take much time as it is a simple and lightweight operation compared to other CPU tasks.  
+    Sensors are used extensively in mobile and embedded systems where resources are limited and the CPU is needed for other tasks.
+    ![Authenticator Usage](assets/AuthenticatorMetrics.png)
+    ![Sensor Usage](assets/SensorMetrics.png)
+    As we can see, our application has a runtime of about 5 seconds (the profiling duration was 15 seconds).  
+    Meanwhile, the sensor runtime is about 0.5 seconds.
 
 2. **What is the best rate for reading the `Accelerometer` and `Gyroscope` data? Justify your answers.**
-
-    TODO
+  The best period for reading acceleration and gyroscope sensor values depends on the application.  
+  Usually there has to be a balance between accuracy, power consumption and performance.  
+  The values usually range from 10hz to 100hz based on the application.  
+  For this project, 20hz were used for the accelerometer and 100hz for the gyroscope which has yielded good results.  
+  If the frequency is too low (the period is too large), we could miss important moves and changes and have less detail and smoothness in the outcome.  
+  If the frequency is too high (the period is too small), we would require much higher processing power and battery consumption which is not efficient. There could also be inaccuracies due to noise.
 
 3. **What are hardware-based and software-based sensors? In which group does each of the mentioned sensors fit?**
-
-    TODO
+  Hardware-based sensors sensors are physical devices that measure specific physical quantities (such as temperature or light). The accelerometer and gyroscope fall into this category. They directly sense motion and orientation using technologies such as MEMS (Micro-Electro-Mechanical Systems).  
+  Software-based sensors derive data by processing outputs and data of other existing sources (such as past data) or one or more hardware-based sensors. They use algorithms to provide higher-level information and predict or estimate the behavior of physical sensors or introduce new information. These sensors are a cost-effective way to provide additional data without the need for additional hardware.  
+  For example, the linear acceleration sensor is a software-based sensor that derives its data from the accelerometer sensor by removing the effect of gravity. The step counter sensor is another example that uses the accelerometer to detect steps.  
+  The two sensors used in this project are both hardware-based.
 
 4. **What is difference between defining sensor as wake-up and non-wake-up? What are the pros and cons of each type? How does this affect on sensors' updates and recognizing the patterns?**
-
-    TODO
+  Wake-up sensors are used to wake up the device from a low-power state when a certain condition is met. They are used to reduce power consumption by keeping the device in a low-power state until a specific event occurs.  
+  Non-wake-up sensors are sensors that do not wake up the device from a low-power state. They are used to provide continuous and realtime monitoring of the environment or the device without waking it up.  
+  Non-wake-up sensors are simpler, usually have more functionality and do not enter sleep mode. They have low latency and high accuracy and are used for realtime monitoring.  
+  Non-wake-up sensors have higher power consumption as they are always active and use energy even when the device is idle.  
+  Wake-up sensors can only activate when needed and are more power-efficient. They are used for events that do not require continuous monitoring.  
+  Wake-up sensors have higher latency as they need to wake up the device before providing data.  
+  Using wake-up sensors, the motion based authentication process can begin as soon as the device is picked up. The device can remain in a low-power state until the wake-up sensor detects the correct motions. This can save power and improve the user experience while non-wake-up sensors would require the device to be already active to read sensor data.
 
 ## References
 
