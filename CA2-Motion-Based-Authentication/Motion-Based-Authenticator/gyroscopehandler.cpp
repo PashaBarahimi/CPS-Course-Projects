@@ -63,9 +63,9 @@ void GyroscopeHandler::handleReading() {
 
     Eigen::VectorXd filteredState = kf_->state();
 
-    Rotation filteredGyro(qAbs(filteredState(0)) < threshold_ ? 0 : filteredState(0),
-                          qAbs(filteredState(1)) < threshold_ ? 0 : filteredState(1),
-                          qAbs(filteredState(2)) < threshold_ ? 0 : filteredState(2));
+    Rotation filteredGyro(qAbs(unbiasedGyro.x) < threshold_ ? 0 : unbiasedGyro.x,
+                          qAbs(unbiasedGyro.y) < threshold_ ? 0 : unbiasedGyro.y,
+                          qAbs(unbiasedGyro.z) < threshold_ ? 0 : unbiasedGyro.z);
 
     readings_.append(filteredGyro);
     emit readingChanged(filteredGyro.x, filteredGyro.y, filteredGyro.z);

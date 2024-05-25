@@ -49,6 +49,7 @@ Q_SIGNALS:
     void authenticationClearMovements();
     void authenticationSuccessful();
     void authenticationFailed(const QString& error);
+    void authenticationChangeAngle(const QString& angle);
 
 private:
     AccelerometerHandler* accelerometerHandler_ = new AccelerometerHandler();

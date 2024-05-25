@@ -12,6 +12,8 @@ Authenticator::Authenticator(AccelerometerHandler *accelerometerHandler,
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &Authenticator::addMovement);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingClearMovements, this, &Authenticator::clearMovements);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingClearMovements, this, &Authenticator::authenticationClearMovements);
+    connect(patternRecognizer_, &PatternRecognizer::patternRecognizingChangeAngle, this, &Authenticator::authenticationChangeAngle);
+
 }
 
 void Authenticator::startAuthenticating() {

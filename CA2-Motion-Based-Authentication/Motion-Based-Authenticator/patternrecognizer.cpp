@@ -38,7 +38,7 @@ void PatternRecognizer::stopRecording()
     location_ = QPointF(0, 0);
     updateAngle(Angle::Degree0);
 
-    qDebug() << name_ << ": " << "State changed to Stopped";
+    qDebug() << "State changed to Stopped";
 
     accelerometerHandler_->stop();
     gyroscopeHandler_->stop();
@@ -49,7 +49,6 @@ void PatternRecognizer::handleGyroReading(qreal x, qreal y, qreal z)
     if (state_ != State::Recognizing && state_ != State::InRotation)
         return;
 
-    // qDebug() << name_ << ": " << "Gyro Reading:" << x << y << z;
     gyroReadings_.append(Rotation(x, y, z));
 
     processGyroReadings();
@@ -57,9 +56,6 @@ void PatternRecognizer::handleGyroReading(qreal x, qreal y, qreal z)
 
 void PatternRecognizer::processGyroReadings()
 {
-
-    // qDebug() << "GyroReadings size: " << gyroReadings_.size();
-
     const int intervalCount = gyroscopeHandler_->getDataRate() / 10;
     if (gyroReadings_.size() < intervalCount)
         return;
@@ -71,7 +67,7 @@ void PatternRecognizer::processGyroReadings()
     }
     auto avgZ = sumZ / intervalCount;
 
-    if (state_ == State::Recognizing && qAbs(avgZ) > 30)
+    if (state_ == State::Recognizing && qAbs(avgZ) > 65)
     {
         qDebug() << name_ << ": " << "State changed to InRotation";
         state_ = State::InRotation;
@@ -94,8 +90,6 @@ void PatternRecognizer::processGyroReadings()
         qreal timeTreshold = 0.2;
         int countTreshold = timeTreshold * accelerometerHandler_->getDataRate();
 
-        qDebug() << name_ << ": " << "AvgZ: " << avgZ << "Count: " << count << countTreshold;
-
         if (count > countTreshold)
         {
             qDebug() << name_ << ": " << "State changed to Recognizing";
@@ -111,35 +105,39 @@ void PatternRecognizer::calculateRotation()
 {
     const qreal deltaTime = 1.0 / gyroscopeHandler_->getDataRate();
 
-    QQuaternion totalRotation = integrateGyroReadings(gyroReadings_, deltaTime);
-    QVector3D euler = totalRotation.toEulerAngles();
-    double yaw = euler.y();
-    double pitch = euler.x();
-    double roll = euler.z();
+    Rotation totalRotation = {0.0, 0.0, 0.0};
 
-    qDebug() << name_ << ": " << "Total Rotation (Euler Angles):" << "Yaw:" << yaw << "Pitch:" << pitch << "Roll:" << roll;
+    for (const auto& velocity : gyroReadings_) {
+        totalRotation.x += velocity.x * deltaTime;
+        totalRotation.y += velocity.y * deltaTime;
+        totalRotation.z += velocity.z * deltaTime;
 
-    auto rotation = std::fmod(-roll, 360.0);
-    if (rotation < 0)
-    {
-        rotation += 360.0;
+        qDebug() << "Angular velocity:" << velocity.z << "degree:" << totalRotation.z;
     }
-    qDebug() << name_ << ": " << "Rotation:" << rotation;
+
+    qDebug() << "Total Rotation (Euler Angles):" << "Yaw:" << totalRotation.x << "Pitch:" << totalRotation.y << "Roll:" << totalRotation.z;
+
+    auto roll = std::fmod(totalRotation.z, 360.0);
+    if (roll < 0)
+    {
+        roll += 360.0;
+    }
+    qDebug() << name_ << ": " << "Rotation:" << roll;
     Angle::Type rotationAngle;
 
-    if (rotation < 45)
+    if (roll < 45)
     {
         rotationAngle = Angle::Degree0;
     }
-    else if (rotation < 135)
+    else if (roll < 135)
     {
         rotationAngle = Angle::Degree90;
     }
-    else if (rotation < 225)
+    else if (roll < 225)
     {
         rotationAngle = Angle::Degree180;
     }
-    else if (rotation < 315)
+    else if (roll < 315)
     {
         rotationAngle = Angle::Degree270;
     }
@@ -150,37 +148,6 @@ void PatternRecognizer::calculateRotation()
 
     auto newAngle = angle_ + rotationAngle;
     updateAngle(newAngle);
-
-    qDebug() << name_ << ": " << "Current Angle:" << Angle::toString(angle_);
-}
-
-QQuaternion PatternRecognizer::integrateGyroReadings(const QVector<Rotation> &readings, double dt)
-{
-    QQuaternion totalRotation(1, 0, 0, 0);
-
-    for (const auto &reading : readings)
-    {
-        // qDebug() << name_ << ": " << "Gyro Reading:" << reading.x << reading.y << reading.z;
-
-        double wx = reading.x;
-        double wy = reading.y;
-        double wz = reading.z;
-
-        double angle = std::sqrt(wx * wx + wy * wy + wz * wz) * dt;
-
-        if (angle > 0.0)
-        {
-            wx /= angle;
-            wy /= angle;
-            wz /= angle;
-        }
-
-        QQuaternion deltaRotation = QQuaternion::fromAxisAndAngle(wx, wy, wz, angle * (180.0 / M_PI)); // Convert angle to degrees
-
-        totalRotation *= deltaRotation;
-    }
-
-    return totalRotation.normalized();
 }
 
 void PatternRecognizer::handleAccelReading(qreal x, qreal y, qreal z)
@@ -188,7 +155,6 @@ void PatternRecognizer::handleAccelReading(qreal x, qreal y, qreal z)
     if (state_ != State::Recognizing && state_ != State::InMovement)
         return;
 
-    // qDebug() << name_ << ": " << "Accel Reading:" << x << y << z;
     accelReadings_.append(Acceleration(x, y, z));
 
     processAccelReadings();
@@ -214,12 +180,9 @@ void PatternRecognizer::processAccelReadings()
     {
         qDebug() << name_ << ": " << "State changed to InMovement";
         state_ = State::InMovement;
-        processGyroReadings();
     }
     else if (state_ == State::InMovement)
     {
-        auto velocity = calculateVelocity();
-
         int count = 0;
         for (int i = accelReadings_.size() - 1; i >= 0; --i)
         {
@@ -236,8 +199,6 @@ void PatternRecognizer::processAccelReadings()
         qreal timeTreshold = 0.2;
         int countTreshold = timeTreshold * accelerometerHandler_->getDataRate();
 
-        // qDebug() << name_ << ": " << "Velocity: " << velocity << "Sum: " << sumX << sumY << "Count: " << count << countTreshold;
-
         if (count > countTreshold)
         {
             qDebug() << name_ << ": " << "State changed to Recognizing";
@@ -247,24 +208,6 @@ void PatternRecognizer::processAccelReadings()
             accelReadings_.clear();
         }
     }
-}
-
-QPair<qreal, qreal> PatternRecognizer::calculateVelocity() const
-{
-    qreal velocityX = 0;
-    qreal velocityY = 0;
-    const qreal deltaTime = 1.0 / accelerometerHandler_->getDataRate();
-
-    for (auto reading : accelReadings_)
-    {
-        qreal accelX = reading.x;
-        qreal accelY = reading.y;
-
-        velocityX += accelX * deltaTime;
-        velocityY += accelY * deltaTime;
-    }
-
-    return {velocityX, velocityY};
 }
 
 void PatternRecognizer::calculateDistance()
@@ -279,22 +222,42 @@ void PatternRecognizer::calculateDistance()
 
     const qreal deltaTime = 1.0 / accelerometerHandler_->getDataRate();
 
-    for (auto reading : accelReadings_)
-    {
+    for (const auto& reading : accelReadings_) {
         sumX += qAbs(reading.x);
         sumY += qAbs(reading.y);
-
-        qreal accelX = reading.x;
-        qreal accelY = reading.y;
-
-        velocityX += accelX * deltaTime;
-        velocityY += accelY * deltaTime;
-
-        distanceX += velocityX * deltaTime + 0.5 * accelX * deltaTime * deltaTime;
-        distanceY += velocityY * deltaTime + 0.5 * accelY * deltaTime * deltaTime;
     }
 
-    qDebug() << name_ << ": " << "Distance X:" << distanceX << "Y:" << distanceY << "Sum X:" << sumX << "Y:" << sumY;
+    bool isHorizontal = sumX > sumY;
+
+
+    int gotPositive = 0;
+    int gotNegative = 0;
+
+    for (const auto& reading : accelReadings_) {
+        if (isHorizontal)
+        {
+            velocityX += reading.x * deltaTime;
+            distanceX += velocityX * deltaTime;
+
+            // qDebug() << "accel:" << reading.x << "velocity:" << velocityX << "distance:" << distanceX;
+
+            if (gotNegative <= 3 && reading.x > 0) { gotPositive++; }
+            if (gotPositive <= 3 && reading.x < 0) { gotNegative++; }
+            if (gotPositive > 3 && velocityX < 0 || gotNegative > 3 && velocityX > 0) { break; }
+        }
+        else
+        {
+            velocityY += reading.y * deltaTime;
+            distanceY += velocityY * deltaTime;
+
+            // qDebug() << "accel:" << reading.y << "velocity:" << velocityY << "distance:" << distanceY;
+
+            if (gotNegative <= 3 && reading.y > 0) { gotPositive++; }
+            if (gotPositive <= 3 && reading.y < 0) { gotNegative++; }
+            if (gotPositive > 3 && velocityY < 0 || gotNegative > 3 && velocityY > 0) { break; }
+        }
+    }
+
 
     Direction::Type direction;
 
@@ -303,11 +266,9 @@ void PatternRecognizer::calculateDistance()
 
     if (angle_ == Angle::Degree90)
     {
-        newDistanceY = -distanceX;
-        newDistanceX = distanceY;
-        qreal temp = sumX;
-        sumX = sumY;
-        sumY = temp;
+        newDistanceY = distanceX;
+        newDistanceX = -distanceY;
+        isHorizontal = !isHorizontal;
     }
     else if (angle_ == Angle::Degree180)
     {
@@ -316,11 +277,9 @@ void PatternRecognizer::calculateDistance()
     }
     else if (angle_ == Angle::Degree270)
     {
-        newDistanceY = distanceX;
-        newDistanceX = -distanceY;
-        qreal temp = sumX;
-        sumX = sumY;
-        sumY = temp;
+        newDistanceY = -distanceX;
+        newDistanceX = distanceY;
+        isHorizontal = !isHorizontal;
     }
     else
     {
@@ -333,15 +292,15 @@ void PatternRecognizer::calculateDistance()
     qreal newX = location_.x();
     qreal newY = location_.y();
 
-    if (sumX > sumY)
+    if (isHorizontal)
     {
         newX += newDistanceX;
         direction = newDistanceX > 0 ? Direction::Right : Direction::Left;
     }
     else
     {
-        newY += newDistanceY;
-        direction = newDistanceY > 0 ? Direction::Bottom : Direction::Top;
+        newY -= newDistanceY;
+        direction = newDistanceY > 0 ? Direction::Top : Direction::Bottom;
     }
 
     auto end = QPointF(newX, newY);
@@ -349,7 +308,7 @@ void PatternRecognizer::calculateDistance()
 
     addNewMovement(start, end, direction, angle_);
 
-    qDebug() << name_ << ": " << "Distance X:" << distanceX << "Y:" << distanceY << "Direction:" << direction << "Angle:" << Angle::toString(angle_) << "Start:" << start << "End:" << end;
+    qDebug() << "Distance X:" << newDistanceX << "Y:" << newDistanceY << "Direction:" << direction << "Angle:" << Angle::toString(angle_) << "Start:" << start << "End:" << end;
 }
 
 void PatternRecognizer::addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle)

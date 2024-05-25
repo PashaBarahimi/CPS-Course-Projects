@@ -5,7 +5,7 @@
 AccelerometerHandler::AccelerometerHandler() {
     sensor_ = new QAccelerometer(this);
     sensor_->setAccelerationMode(QAccelerometer::User);
-    sensor_->setDataRate(100);
+    sensor_->setDataRate(200);
 
     connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::handleReading);
 
@@ -58,12 +58,6 @@ void AccelerometerHandler::handleReading() {
     Acceleration unbiasedAccel(rawAccel.x - readingsBias_.x,
                                rawAccel.y - readingsBias_.y,
                                rawAccel.z - readingsBias_.z);
-
-    Eigen::VectorXd y(3);
-    y << unbiasedAccel.x, unbiasedAccel.y, unbiasedAccel.z;
-    kf_->update(y);
-
-    Eigen::VectorXd filteredState = kf_->state();
 
     Acceleration filteredAccel(qAbs(unbiasedAccel.x) < threshold_ ? 0 : unbiasedAccel.x,
                                qAbs(unbiasedAccel.y) < threshold_ ? 0 : unbiasedAccel.y,

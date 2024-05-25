@@ -14,6 +14,7 @@ Backend::Backend(QObject *parent)
     connect(authenticator_, &Authenticator::authenticationClearMovements, this, &Backend::authenticationClearMovements);
     connect(authenticator_, &Authenticator::authenticationSuccessful, this, &Backend::authenticationSuccessful);
     connect(authenticator_, &Authenticator::authenticationFailed, this, &Backend::authenticationFailed);
+    connect(authenticator_, &Authenticator::authenticationChangeAngle, this, &Backend::authenticationChangeAngle);
     connect(accelerometerHandler_, &AccelerometerHandler::calibrationFinished, this, &Backend::calibrationFinished);
     connect(accelerometerHandler_, &AccelerometerHandler::updateAccelData, this, &Backend::updateAccelData);
     connect(gyroscopeHandler_, &GyroscopeHandler::calibrationFinished, this, &Backend::calibrationFinished);

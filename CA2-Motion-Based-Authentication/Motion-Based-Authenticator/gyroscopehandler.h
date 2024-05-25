@@ -34,7 +34,7 @@ private:
     Rotation readingsBias_;
     QGyroscope *sensor_;
     KalmanFilter *kf_;
-    const qreal threshold_ = 0.1;
+    const qreal threshold_ = 0.5;
 };
 
 #endif // GYROSCOPEHANDLER_H

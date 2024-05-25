@@ -34,7 +34,7 @@ private:
     Acceleration readingsBias_;
     QAccelerometer *sensor_;
     KalmanFilter *kf_;
-    const qreal threshold_ = 0.01;
+    const qreal threshold_ = 0.1;
 };
 
 #endif // ACCELEROMETERHANDLER_H

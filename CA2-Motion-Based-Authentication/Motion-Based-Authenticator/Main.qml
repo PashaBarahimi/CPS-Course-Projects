@@ -89,6 +89,10 @@ ApplicationWindow {
         onAuthenticationFailed: (error) => {
             authPage.sendFailureNotification("Authentication Failed! " + error)
         }
+
+        onAuthenticationChangeAngle: (angleStr) => {
+            authPage.changeAngle(angleStr)
+        }
     }
 
     ColumnLayout {

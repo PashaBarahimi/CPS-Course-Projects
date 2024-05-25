@@ -23,6 +23,7 @@ signals:
     void authenticationClearMovements();
     void authenticationSuccessful();
     void authenticationFailed(const QString& error);
+    void authenticationChangeAngle(const QString& angle);
 
 private slots:
     void addMovement(Movement *movement);

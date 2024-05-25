@@ -45,7 +45,6 @@ private slots:
 private:
     void calculateDistance();
     void calculateRotation();
-    QQuaternion integrateGyroReadings(const QVector<Rotation> &readings, double dt);
     void processAccelReadings();
     void processGyroReadings();
     void addNewMovement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle);
