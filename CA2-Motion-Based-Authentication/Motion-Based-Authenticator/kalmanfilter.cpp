@@ -1,14 +1,14 @@
 /**
-* Implementation of KalmanFilter class.
-*
-* @author: Hayk Martirosyan
-* @date: 2014.11.15
-*/
+ * Implementation of KalmanFilter class.
+ *
+ * @author: Hayk Martirosyan
+ * @date: 2014.11.15
+ */
+
+#include "kalmanfilter.h"
 
 #include <iostream>
 #include <stdexcept>
-
-#include "kalmanfilter.h"
 
 KalmanFilter::KalmanFilter(
     double dt,
@@ -17,10 +17,7 @@ KalmanFilter::KalmanFilter(
     const Eigen::MatrixXd& Q,
     const Eigen::MatrixXd& R,
     const Eigen::MatrixXd& P)
-    : A(A), C(C), Q(Q), R(R), P0(P),
-    m(C.rows()), n(A.rows()), dt(dt), initialized(false),
-    I(n, n), x_hat(n), x_hat_new(n)
-{
+    : A(A), C(C), Q(Q), R(R), P0(P), m(C.rows()), n(A.rows()), dt(dt), initialized(false), I(n, n), x_hat(n), x_hat_new(n) {
     I.setIdentity();
 }
 
@@ -43,22 +40,20 @@ void KalmanFilter::init() {
 }
 
 void KalmanFilter::update(const Eigen::VectorXd& y) {
-
-    if(!initialized)
+    if (!initialized)
         throw std::runtime_error("Filter is not initialized!");
 
     x_hat_new = A * x_hat;
-    P = A*P*A.transpose() + Q;
-    K = P*C.transpose()*(C*P*C.transpose() + R).inverse();
-    x_hat_new += K * (y - C*x_hat_new);
-    P = (I - K*C)*P;
+    P = A * P * A.transpose() + Q;
+    K = P * C.transpose() * (C * P * C.transpose() + R).inverse();
+    x_hat_new += K * (y - C * x_hat_new);
+    P = (I - K * C) * P;
     x_hat = x_hat_new;
 
     t += dt;
 }
 
 void KalmanFilter::update(const Eigen::VectorXd& y, double dt, const Eigen::MatrixXd A) {
-
     this->A = A;
     this->dt = dt;
     update(y);

@@ -2,13 +2,13 @@
 #define GYROSCOPEHANDLER_H
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QGyroscope>
 #include <QGyroscopeReading>
 #include <QObject>
-#include <QDebug>
 
-#include "rotation.h"
 #include "kalmanfilter.h"
+#include "rotation.h"
 
 class GyroscopeHandler : public QObject {
     Q_OBJECT
@@ -32,8 +32,8 @@ private slots:
 private:
     QVector<Rotation> readings_;
     Rotation readingsBias_;
-    QGyroscope *sensor_;
-    KalmanFilter *kf_;
+    QGyroscope* sensor_;
+    KalmanFilter* kf_;
     const qreal threshold_ = 0.5;
 };
 

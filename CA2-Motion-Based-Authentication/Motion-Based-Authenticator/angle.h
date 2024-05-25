@@ -5,8 +5,7 @@
 #include <QQmlEngine>
 #include <QString>
 
-class Angle : public QObject
-{
+class Angle : public QObject {
     Q_OBJECT
     QML_UNCREATABLE("Enum values only")
     QML_ELEMENT
@@ -20,8 +19,7 @@ public:
     };
     Q_ENUM(Type)
 
-    static QString toString(Type angle)
-    {
+    static QString toString(Type angle) {
         switch (angle) {
         case Degree0: return "0";
         case Degree90: return "90";
@@ -30,8 +28,7 @@ public:
         }
     }
 
-    friend Angle::Type operator+(Angle::Type lhs, Angle::Type rhs)
-    {
+    friend Angle::Type operator+(Angle::Type lhs, Angle::Type rhs) {
         int result = static_cast<int>(lhs) + static_cast<int>(rhs);
         result %= 4; // Ensure the result wraps around within the range 0-3
         return static_cast<Angle::Type>(result);

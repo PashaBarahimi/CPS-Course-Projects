@@ -1,6 +1,6 @@
-#include <QTimer>
-
 #include "gyroscopehandler.h"
+
+#include <QTimer>
 
 GyroscopeHandler::GyroscopeHandler() {
     sensor_ = new QGyroscope(this);
@@ -50,7 +50,7 @@ void GyroscopeHandler::clear() {
 }
 
 void GyroscopeHandler::handleReading() {
-    QGyroscopeReading *reading = sensor_->reading();
+    QGyroscopeReading* reading = sensor_->reading();
 
     Rotation rawGyro(reading->x(), reading->y(), reading->z());
     Rotation unbiasedGyro(rawGyro.x - readingsBias_.x,

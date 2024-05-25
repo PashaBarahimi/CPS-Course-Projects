@@ -1,6 +1,6 @@
 #include "backend.h"
 
-Backend::Backend(QObject *parent)
+Backend::Backend(QObject* parent)
     : QObject{parent} {
     patternRecorder_ = new PatternRecorder(accelerometerHandler_, gyroscopeHandler_);
     authenticator_ = new Authenticator(accelerometerHandler_, gyroscopeHandler_);
@@ -65,4 +65,3 @@ void Backend::stopShowingSensors() {
     accelerometerHandler_->stop();
     gyroscopeHandler_->stop();
 }
-

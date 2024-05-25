@@ -7,13 +7,12 @@
 #include "gyroscopehandler.h"
 #include "patternrecognizer.h"
 
-class Authenticator : public QObject
-{
+class Authenticator : public QObject {
     Q_OBJECT
 public:
-    explicit Authenticator(AccelerometerHandler *accelerometerHandler,
-                             GyroscopeHandler *gyroscopeHandler,
-                             QObject *parent = nullptr);
+    explicit Authenticator(AccelerometerHandler* accelerometerHandler,
+                           GyroscopeHandler* gyroscopeHandler,
+                           QObject* parent = nullptr);
     void startAuthenticating();
     void stopAuthenticating(const MovementPattern& pattern);
 
@@ -26,14 +25,12 @@ signals:
     void authenticationChangeAngle(const QString& angle);
 
 private slots:
-    void addMovement(Movement *movement);
+    void addMovement(Movement* movement);
     void clearMovements();
 
 private:
     PatternRecognizer* patternRecognizer_;
     MovementPattern recordedPattern_;
-
 };
-
 
 #endif // AUTHENTICATOR_H

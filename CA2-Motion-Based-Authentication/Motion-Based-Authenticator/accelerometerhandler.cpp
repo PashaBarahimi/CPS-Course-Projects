@@ -1,6 +1,6 @@
-#include <QTimer>
-
 #include "accelerometerhandler.h"
+
+#include <QTimer>
 
 AccelerometerHandler::AccelerometerHandler() {
     sensor_ = new QAccelerometer(this);
@@ -8,7 +8,6 @@ AccelerometerHandler::AccelerometerHandler() {
     sensor_->setDataRate(200);
 
     connect(sensor_, &QAccelerometer::readingChanged, this, &AccelerometerHandler::handleReading);
-
 
     int n = 3;
     int m = 3;
@@ -52,7 +51,7 @@ void AccelerometerHandler::clear() {
 }
 
 void AccelerometerHandler::handleReading() {
-    QAccelerometerReading *reading = sensor_->reading();
+    QAccelerometerReading* reading = sensor_->reading();
 
     Acceleration rawAccel(reading->x(), reading->y(), reading->z());
     Acceleration unbiasedAccel(rawAccel.x - readingsBias_.x,

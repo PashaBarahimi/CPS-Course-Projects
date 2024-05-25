@@ -1,17 +1,17 @@
 #ifndef MOVEMENT_H
 #define MOVEMENT_H
 
-#include <QObject>
-#include <QQmlEngine>
-#include <QJsonObject>
-#include <QPointF>
 #include <QtQml/qqmlregistration.h>
 
-#include "direction.h"
-#include "angle.h"
+#include <QJsonObject>
+#include <QObject>
+#include <QPointF>
+#include <QQmlEngine>
 
-class Movement : public QObject
-{
+#include "angle.h"
+#include "direction.h"
+
+class Movement : public QObject {
     Q_OBJECT
     Q_PROPERTY(QPointF start READ start WRITE setStart NOTIFY startChanged)
     Q_PROPERTY(QPointF end READ end WRITE setEnd NOTIFY endChanged)
@@ -20,8 +20,8 @@ class Movement : public QObject
     QML_ELEMENT
 
 public:
-    explicit Movement(QObject *parent = nullptr);
-    Movement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle, QObject *parent = nullptr);
+    explicit Movement(QObject* parent = nullptr);
+    Movement(QPointF start, QPointF end, Direction::Type direction, Angle::Type angle, QObject* parent = nullptr);
 
     QPointF start() const;
     QPointF end() const;

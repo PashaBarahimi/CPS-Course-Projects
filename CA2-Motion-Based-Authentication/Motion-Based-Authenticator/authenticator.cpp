@@ -1,11 +1,9 @@
 #include "authenticator.h"
 
-
-Authenticator::Authenticator(AccelerometerHandler *accelerometerHandler,
-                                 GyroscopeHandler *gyroscopeHandler,
-                                 QObject *parent)
-    : QObject{parent}
-{
+Authenticator::Authenticator(AccelerometerHandler* accelerometerHandler,
+                             GyroscopeHandler* gyroscopeHandler,
+                             QObject* parent)
+    : QObject{parent} {
     patternRecognizer_ = new PatternRecognizer("Authenticator Recognizer", accelerometerHandler, gyroscopeHandler);
 
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &Authenticator::authenticationAddMovement);
@@ -13,7 +11,6 @@ Authenticator::Authenticator(AccelerometerHandler *accelerometerHandler,
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingClearMovements, this, &Authenticator::clearMovements);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingClearMovements, this, &Authenticator::authenticationClearMovements);
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingChangeAngle, this, &Authenticator::authenticationChangeAngle);
-
 }
 
 void Authenticator::startAuthenticating() {
@@ -25,12 +22,13 @@ void Authenticator::stopAuthenticating(const MovementPattern& pattern) {
 
     if (recordedPattern_.getPattern().isEmpty()) {
         emit authenticationFailed("No movements recorded");
-    } else {
+    }
+    else {
         pattern.matches(recordedPattern_) ? emit authenticationSuccessful() : emit authenticationFailed("Pattern does not match");
     }
 }
 
-void Authenticator::addMovement(Movement *movement) {
+void Authenticator::addMovement(Movement* movement) {
     recordedPattern_.addMovement(movement);
 }
 

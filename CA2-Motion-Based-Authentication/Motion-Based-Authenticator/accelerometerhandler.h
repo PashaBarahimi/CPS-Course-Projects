@@ -1,11 +1,11 @@
 #ifndef ACCELEROMETERHANDLER_H
 #define ACCELEROMETERHANDLER_H
 
-#include <QCoreApplication>
 #include <QAccelerometer>
 #include <QAccelerometerReading>
-#include <QObject>
+#include <QCoreApplication>
 #include <QDebug>
+#include <QObject>
 
 #include "acceleration.h"
 #include "kalmanfilter.h"
@@ -32,8 +32,8 @@ private slots:
 private:
     QVector<Acceleration> readings_;
     Acceleration readingsBias_;
-    QAccelerometer *sensor_;
-    KalmanFilter *kf_;
+    QAccelerometer* sensor_;
+    KalmanFilter* kf_;
     const qreal threshold_ = 0.1;
 };
 

@@ -1,10 +1,9 @@
 #include "patternrecorder.h"
 
-PatternRecorder::PatternRecorder(AccelerometerHandler *accelerometerHandler,
-                                 GyroscopeHandler *gyroscopeHandler,
-                                 QObject *parent)
-    : QObject{parent}
-{
+PatternRecorder::PatternRecorder(AccelerometerHandler* accelerometerHandler,
+                                 GyroscopeHandler* gyroscopeHandler,
+                                 QObject* parent)
+    : QObject{parent} {
     patternRecognizer_ = new PatternRecognizer("Recorder Recognizer", accelerometerHandler, gyroscopeHandler);
 
     connect(patternRecognizer_, &PatternRecognizer::patternRecognizingAddMovement, this, &PatternRecorder::patternRecordingAddMovement);
@@ -24,12 +23,13 @@ void PatternRecorder::stopRecording() {
 
     if (recordedPattern_.getPattern().isEmpty()) {
         emit patternRecordingFailed("No movements recorded");
-    } else {
+    }
+    else {
         emit patternRecordingSuccessful();
     }
 }
 
-void PatternRecorder::addMovement(Movement *movement) {
+void PatternRecorder::addMovement(Movement* movement) {
     recordedPattern_.addMovement(movement);
 }
 

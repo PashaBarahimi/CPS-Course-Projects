@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVector>
+
 #include "movement.h"
 
 class MovementPattern {

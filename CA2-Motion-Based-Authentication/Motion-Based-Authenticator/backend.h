@@ -4,20 +4,19 @@
 #include <QObject>
 #include <QQmlEngine>
 
-#include "movement.h"
 #include "accelerometerhandler.h"
+#include "authenticator.h"
 #include "gyroscopehandler.h"
+#include "movement.h"
 #include "patternrecognizer.h"
 #include "patternrecorder.h"
-#include "authenticator.h"
 
-class Backend : public QObject
-{
+class Backend : public QObject {
     Q_OBJECT
     QML_ELEMENT
 
 public:
-    explicit Backend(QObject *parent = nullptr);
+    explicit Backend(QObject* parent = nullptr);
 
     Q_INVOKABLE void startCalibration();
 
