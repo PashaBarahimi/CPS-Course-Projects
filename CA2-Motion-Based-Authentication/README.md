@@ -24,7 +24,12 @@ This project focuses on the development of a motion-based authentication system 
 
 ## Assumptions
 
-TODO
+We assumed that at each moment, the application is in only and only one of the following states:
+
+- **Stopped**: The application is not recording or authenticating the motion data.
+- **InRotation**: The application is recording the rotation of the phone.
+- **InMovement**: The application is recording the movement of the phone.
+- **Recognizing**: The application is recognizing the motion data. This is the initial state of the application.
 
 ## Software Conceptual/Structural Design
 
@@ -124,9 +129,15 @@ And the failure scenario is as follows:
 
 Calibration and Pattern Recording:
 
+![pattern](assets/pattern.gif)
+
 Successful Authentication:
 
+![successful](assets/successful.gif)
+
 Failed Authentication:
+
+![failure](assets/failure.gif)
 
 ### Perfetto
 
