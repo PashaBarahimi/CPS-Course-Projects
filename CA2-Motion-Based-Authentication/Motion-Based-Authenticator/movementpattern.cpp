@@ -5,7 +5,7 @@
 bool MovementPattern::matches(const MovementPattern& other) const {
     if (pattern_.size() != other.pattern_.size()) return false;
 
-    const qreal distThreshold = 0.1;
+    const qreal distThreshold = 0.2;
 
     for (int i = 0; i < pattern_.size(); ++i) {
         auto a = pattern_[i];
